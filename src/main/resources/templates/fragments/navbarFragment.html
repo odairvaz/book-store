@@ -1,0 +1,19 @@
+<nav th:with="baseUrl=@{/api/v1/books}" class="navbar navbar-expand-lg navbar-light bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand text-white" th:href="${baseUrl}">Book Store</a>
+        <button aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"
+                class="navbar-toggler" data-bs-target="#navbarSupportedContent" data-bs-toggle="collapse" type="button">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a aria-current="page" class="nav-link active text-white" th:href="${baseUrl}">Home</a>
+                </li>
+            </ul>
+            <div class="d-flex">
+                <a class="nav-link text-white" th:href="${baseUrl + '/new'}">Add Book</a>
+            </div>
+        </div>
+    </div>
+</nav>

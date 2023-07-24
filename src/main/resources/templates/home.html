@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="fragments/headerFragment.html" />
+</head>
+<body>
+<head th:insert="fragments/navbarFragment.html"></head>
+<main class="container-fluid">
+    <div class="row">
+        <div class="mx-auto col-10 col-md-8">
+            <div th:if="${books.size() > 0}">
+                <table class="table table-hover table-responsive-xl">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Publisher</th>
+                        <th>Year</th>
+                        <th>Price</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:with="baseUrl=@{/api/v1/books}" th:each="book : ${books}">
+                        <td>
+                            <a th:href="@{/api/v1/books/details/{id}(id=${book.id})}" th:text="${book.title}"></a>
+                        </td>
+                        <td th:text="${book.author}"></td>
+                        <td th:text="${book.publisher}"></td>
+                        <td th:text="${book.year}"></td>
+                        <td th:text="${book.price}"></td>
+                        <td class="text-center">
+                            <div class="btn-group" role="group">
+                                <a class="btn btn-primary me-2"
+                                   th:href="@{/api/v1/books/edit/{id}(id=${book.id})}">Edit</a>
+                                <a class="btn btn-danger"
+                                   th:href="@{/api/v1/books/delete/{id}(id=${book.id})}">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+<script crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

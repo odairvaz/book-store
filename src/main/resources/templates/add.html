@@ -1,0 +1,42 @@
+<head xmlns:th="http://www.thymeleaf.org">
+    <th:block th:insert="fragments/headerFragment.html" />
+</head>
+<body>
+<head th:insert="fragments/navbarFragment.html"></head>
+<main th:with="baseUrl=@{/api/v1/books}" class="container-fluid">
+    <div class="row">
+        <div class="mx-auto col-10 col-md-8 col-lg-6">
+            <h1>Add New book</h1>
+            <form method="post" th:action="${baseUrl + '/save'}" th:object="${book}">
+                <div class="mb-3">
+                    <label class="form-label" for="titleInput">Title</label>
+                    <input class="form-control" id="titleInput" th:field="*{title}" type="text">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="authorInput">Author</label>
+                    <input class="form-control" id="authorInput" th:field="*{author}" type="text">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="publisherInput">Publisher</label>
+                    <input class="form-control" id="publisherInput" th:field="*{publisher}" type="text">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="yearInput">Year</label>
+                    <input class="form-control" id="yearInput" min="1900" step="1" th:field="*{year}" th:max="${currentYear}"
+                           type="number">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="priceInput">Price</label>
+                    <input class="form-control" id="priceInput" min="2" step="0.1" th:field="*{price}" type="number">
+                </div>
+
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+</main>
+</body>
