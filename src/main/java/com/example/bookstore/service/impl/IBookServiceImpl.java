@@ -5,6 +5,7 @@ import com.example.bookstore.persistense.repository.IBookRepository;
 import com.example.bookstore.service.IBookService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -33,6 +34,11 @@ public class IBookServiceImpl implements IBookService {
     @Override
     public Iterable<Book> findAll() {
         return bookRepository.findAll();
+    }
+
+    @Override
+    public List<Book> findByTitleContainingIgnoreCase(String keyword) {
+        return bookRepository.findByTitleContainingIgnoreCase(keyword);
     }
 
 }

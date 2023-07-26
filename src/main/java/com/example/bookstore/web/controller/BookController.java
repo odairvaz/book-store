@@ -3,9 +3,11 @@ package com.example.bookstore.web.controller;
 
 import com.example.bookstore.persistense.model.Book;
 import com.example.bookstore.service.IBookService;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Year;
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 @RequestMapping("/api/v1/books")
@@ -26,8 +30,15 @@ public class BookController {
     }
 
     @GetMapping
-    public String home(Model model) {
-        model.addAttribute("books", bookService.findAll());
+    public String home(Model model, @Param("keyword") String keyword) {
+        List<Book> books = new ArrayList<>();
+        if (StringUtils.hasLength(keyword)) {
+            books.addAll(bookService.findByTitleContainingIgnoreCase(keyword));
+            model.addAttribute("keyword", keyword);
+        } else {
+            bookService.findAll().forEach(books::add);
+        }
+        model.addAttribute("books", books);
         return "home";
     }
 
