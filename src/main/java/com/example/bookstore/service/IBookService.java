@@ -2,6 +2,7 @@ package com.example.bookstore.service;
 
 import com.example.bookstore.persistense.model.Book;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface IBookService {
@@ -15,4 +16,5 @@ public interface IBookService {
 
     Iterable<Book> findAll();
 
+    List<Book> findByTitleContainingIgnoreCase(String keyword);
 }
