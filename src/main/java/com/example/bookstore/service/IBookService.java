@@ -1,8 +1,9 @@
 package com.example.bookstore.service;
 
 import com.example.bookstore.persistense.model.Book;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface IBookService {
@@ -14,7 +15,7 @@ public interface IBookService {
 
     void deleteById(Long id);
 
-    Iterable<Book> findAll();
+    Page<Book> findAll(Pageable pageable);
 
-    List<Book> findByTitleContainingIgnoreCase(String keyword);
+    Page<Book> findByTitleContainingIgnoreCase(String keyword, Pageable pageable);
 }
