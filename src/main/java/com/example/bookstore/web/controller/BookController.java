@@ -3,25 +3,25 @@ package com.example.bookstore.web.controller;
 
 import com.example.bookstore.persistense.model.Book;
 import com.example.bookstore.service.IBookService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Year;
-import java.util.ArrayList;
 import java.util.List;
 
 @Controller
 @RequestMapping("/api/v1/books")
 public class BookController {
 
+    public static final String REDIRECT_BOOKS = "redirect:/api/v1/books";
     private final IBookService bookService;
     int currentYear = Year.now().getValue();
 
@@ -30,15 +30,22 @@ public class BookController {
     }
 
     @GetMapping
-    public String home(Model model, @Param("keyword") String keyword) {
-        List<Book> books = new ArrayList<>();
+    public String home(Model model, @Param("keyword") String keyword, @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "3") int size) {
+        Pageable paging = PageRequest.of(page - 1, size);
+        Page<Book> pageBooks;
+
         if (StringUtils.hasLength(keyword)) {
-            books.addAll(bookService.findByTitleContainingIgnoreCase(keyword));
+            pageBooks = bookService.findByTitleContainingIgnoreCase(keyword, paging);
             model.addAttribute("keyword", keyword);
         } else {
-            bookService.findAll().forEach(books::add);
+            pageBooks = bookService.findAll(paging);
         }
+        List<Book> books = pageBooks.getContent();
         model.addAttribute("books", books);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("currentPage", pageBooks.getNumber() + 1);
+        model.addAttribute("totalItems", pageBooks.getTotalElements());
+        model.addAttribute("totalPages", pageBooks.getTotalPages());
         return "home";
     }
 
@@ -54,7 +61,7 @@ public class BookController {
     @PostMapping("/save")
     public String saveBook(Book book) {
         bookService.save(book);
-        return "redirect:/api/v1/books";
+        return REDIRECT_BOOKS;
     }
 
     @GetMapping("/details/{id}")
@@ -84,16 +91,16 @@ public class BookController {
                     existingBook.setYear(book.getYear());
                     existingBook.setPrice(book.getPrice());
                     bookService.save(existingBook);
-                    return "redirect:/api/v1/books";
+                    return REDIRECT_BOOKS;
                 }
         ).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        return "redirect:/api/v1/books";
+        return REDIRECT_BOOKS;
     }
 
     @GetMapping("/delete/{id}")
     public String deleteBook(@PathVariable Long id) {
         bookService.deleteById(id);
-        return "redirect:/api/v1/books";
+        return REDIRECT_BOOKS;
     }
 
 }

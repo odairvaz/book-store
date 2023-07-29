@@ -1,12 +1,12 @@
 
 <head xmlns:th="http://www.thymeleaf.org">
-    <th:block th:insert="fragments/headerFragment.html">
+    <th:block th:insert="~{fragments/headerFragment.html}">
         <th:param name="pageTitle" value="Add Book"/>
     </th:block>
 </head>
 
 <body>
-<head th:insert="fragments/navbarFragment.html"></head>
+<head th:insert="~{fragments/navbarFragment.html}"></head>
 
 <main class="container-fluid">
     <div class="row">

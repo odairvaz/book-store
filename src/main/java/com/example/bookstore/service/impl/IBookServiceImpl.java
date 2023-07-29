@@ -3,9 +3,10 @@ package com.example.bookstore.service.impl;
 import com.example.bookstore.persistense.model.Book;
 import com.example.bookstore.persistense.repository.IBookRepository;
 import com.example.bookstore.service.IBookService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -32,13 +33,13 @@ public class IBookServiceImpl implements IBookService {
     }
 
     @Override
-    public Iterable<Book> findAll() {
-        return bookRepository.findAll();
+    public Page<Book> findAll(Pageable pageable) {
+        return bookRepository.findAll(pageable);
     }
 
     @Override
-    public List<Book> findByTitleContainingIgnoreCase(String keyword) {
-        return bookRepository.findByTitleContainingIgnoreCase(keyword);
+    public Page<Book> findByTitleContainingIgnoreCase(String keyword, Pageable pageable) {
+        return bookRepository.findByTitleContainingIgnoreCase(keyword, pageable);
     }
 
 }
