@@ -1,8 +1,10 @@
 package com.example.bookstore.persistense.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
+import java.sql.Blob;
 
 @Entity
 public class Book {
@@ -11,20 +13,30 @@ public class Book {
     @GeneratedValue
     private Long id;
 
+    @NotBlank
     private String title;
+
+    @NotBlank
     private String author;
+
     private String publisher;
+
+    @Min(1900)
     private int year;
+
     private double price;
+
+    private byte[] imageData;
 
     public Book() {}
 
-    public Book(String title, String author, String publisher, int year, double price) {
+    public Book(String title, String author, String publisher, int year, double price, byte[] imageData) {
         this.title = title;
         this.author = author;
         this.publisher = publisher;
         this.year = year;
         this.price = price;
+        this.imageData = imageData;
     }
 
     public Long getId() {
@@ -69,6 +81,14 @@ public class Book {
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public byte[] getImageData() {
+        return imageData;
+    }
+
+    public void setImageData(byte[] imageData) {
+        this.imageData = imageData;
     }
 
     @Override

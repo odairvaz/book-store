@@ -3,6 +3,8 @@ package com.example.bookstore.web.controller;
 
 import com.example.bookstore.persistense.model.Book;
 import com.example.bookstore.service.IBookService;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -11,9 +13,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.sql.rowset.serial.SerialBlob;
+import java.io.IOException;
+import java.sql.Blob;
+import java.sql.SQLException;
 import java.time.Year;
 import java.util.List;
 
@@ -22,6 +30,7 @@ import java.util.List;
 public class BookController {
 
     public static final String REDIRECT_BOOKS = "redirect:/api/v1/books";
+    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(BookController.class);
     private final IBookService bookService;
     int currentYear = Year.now().getValue();
 
@@ -59,7 +68,18 @@ public class BookController {
     }
 
     @PostMapping("/save")
-    public String saveBook(Book book) {
+    public String saveBook(@ModelAttribute @Valid Book book, BindingResult bindingResult, @RequestParam("image") MultipartFile imageData) {
+        if (bindingResult.hasErrors()) {
+            return "add";
+        }
+        if (!imageData.isEmpty()) {
+            try {
+                byte[] imageDataBytes = imageData.getBytes();
+                book.setImageData(imageDataBytes);
+            } catch (IOException e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to process image upload.", e);
+            }
+        }
         bookService.save(book);
         return REDIRECT_BOOKS;
     }
@@ -83,17 +103,16 @@ public class BookController {
 
     @PostMapping("/update/{id}")
     public String updateBook(@PathVariable Long id, Book book) {
-        bookService.findById(id).map(
-                existingBook -> {
-                    existingBook.setTitle(book.getTitle());
-                    existingBook.setAuthor(book.getAuthor());
-                    existingBook.setPublisher(book.getPublisher());
-                    existingBook.setYear(book.getYear());
-                    existingBook.setPrice(book.getPrice());
-                    bookService.save(existingBook);
-                    return REDIRECT_BOOKS;
-                }
-        ).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        bookService.findById(id).map(existingBook -> {
+            existingBook.setTitle(book.getTitle());
+            existingBook.setAuthor(book.getAuthor());
+            existingBook.setPublisher(book.getPublisher());
+            existingBook.setYear(book.getYear());
+            existingBook.setPrice(book.getPrice());
+//                    existingBook.setImageData(book.getImageData());
+            bookService.save(existingBook);
+            return REDIRECT_BOOKS;
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         return REDIRECT_BOOKS;
     }
 

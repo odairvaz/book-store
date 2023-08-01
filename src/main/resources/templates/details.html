@@ -28,6 +28,13 @@
                         <td>Year</td>
                         <td th:text="${book.year}">Year</td>
                     </tr>
+                    <tr>
+                        <td>Image</td>
+                        <td>
+                            <img th:if="${book.imageData}" th:attr="src=${'data:image/png;base64,' + T(java.util.Base64).getEncoder().encodeToString(book.imageData)}"
+                                 alt="Book Image" style="max-height: 200px; max-width: 200px;" />
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
                 <div class="btn-group" role="group">
