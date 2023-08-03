@@ -33,7 +33,7 @@
           <input id="price" class="form-control" min="2" step="0.1" th:field="*{price}" type="number" />
         </div>
         <div class="form-group">
-          <img th:if="${book.imageData}" th:src="${'data:image/png;base64,' + base64Image}"
+          <img th:if="${book.bookCover}" th:src="${'data:image/png;base64,' + base64Image}"
                th:alt="${book.title}" style="max-height: 200px; max-width: 200px;" />
         </div>
         <div class="form-group">

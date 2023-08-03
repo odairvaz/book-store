@@ -72,7 +72,7 @@ public class BookController {
         }
 
         byte[] processedImageData = ImageUtils.processImageData(imageData);
-        book.setImageData(processedImageData);
+        book.setBookCover(processedImageData);
 
         bookService.save(book);
         return REDIRECT_BOOKS;
@@ -83,8 +83,8 @@ public class BookController {
         Book book = bookService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("book", book);
         model.addAttribute(PAGE_TITLE_ATTRIBUTE, "Book Details");
-        if (book.getImageData() != null) {
-            String base64Image = Base64.getEncoder().encodeToString(book.getImageData());
+        if (book.getBookCover() != null) {
+            String base64Image = Base64.getEncoder().encodeToString(book.getBookCover());
             model.addAttribute("base64Image", base64Image);
         }
         return "details";
@@ -96,8 +96,8 @@ public class BookController {
         model.addAttribute("book", book);
         model.addAttribute("currentYear", currentYear);
         model.addAttribute(PAGE_TITLE_ATTRIBUTE, "Edit Book");
-        if (book.getImageData() != null) {
-            String base64Image = Base64.getEncoder().encodeToString(book.getImageData());
+        if (book.getBookCover() != null) {
+            String base64Image = Base64.getEncoder().encodeToString(book.getBookCover());
             model.addAttribute("base64Image", base64Image);
         }
         return "edit";
@@ -117,7 +117,7 @@ public class BookController {
             existingBook.setPrice(book.getPrice());
 
             byte[] processedImageData = ImageUtils.processImageData(imageData);
-            existingBook.setImageData(processedImageData);
+            existingBook.setBookCover(processedImageData);
 
             bookService.save(existingBook);
 
