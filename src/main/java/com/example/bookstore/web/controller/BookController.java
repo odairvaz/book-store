@@ -3,6 +3,8 @@ package com.example.bookstore.web.controller;
 
 import com.example.bookstore.persistense.model.Book;
 import com.example.bookstore.service.IBookService;
+import com.example.bookstore.utils.ImageUtils;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -11,19 +13,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Year;
+import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/api/v1/books")
 public class BookController {
 
     public static final String REDIRECT_BOOKS = "redirect:/api/v1/books";
+    public static final String PAGE_TITLE_ATTRIBUTE = "pageTitle";
     private final IBookService bookService;
-    int currentYear = Year.now().getValue();
+    private final int currentYear = Year.now().getValue();
 
     public BookController(IBookService bookService) {
         this.bookService = bookService;
@@ -54,12 +61,19 @@ public class BookController {
         Book book = new Book();
         model.addAttribute("currentYear", currentYear);
         model.addAttribute("book", book);
-        model.addAttribute("pageTitle", "Add New Book");
+        model.addAttribute(PAGE_TITLE_ATTRIBUTE, "Add New Book");
         return "add";
     }
 
     @PostMapping("/save")
-    public String saveBook(Book book) {
+    public String saveBook(@ModelAttribute @Valid Book book, BindingResult bindingResult, @RequestParam("image") MultipartFile imageData) {
+        if (bindingResult.hasErrors()) {
+            return "add";
+        }
+
+        byte[] processedImageData = ImageUtils.processImageData(imageData);
+        book.setBookCover(processedImageData);
+
         bookService.save(book);
         return REDIRECT_BOOKS;
     }
@@ -68,7 +82,11 @@ public class BookController {
     public String showBookDetails(Model model, @PathVariable Long id) {
         Book book = bookService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("book", book);
-        model.addAttribute("pageTitle", "Book Details");
+        model.addAttribute(PAGE_TITLE_ATTRIBUTE, "Book Details");
+        if (book.getBookCover() != null) {
+            String base64Image = Base64.getEncoder().encodeToString(book.getBookCover());
+            model.addAttribute("base64Image", base64Image);
+        }
         return "details";
     }
 
@@ -77,25 +95,38 @@ public class BookController {
         Book book = bookService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("book", book);
         model.addAttribute("currentYear", currentYear);
-        model.addAttribute("pageTitle", "Edit Book");
+        model.addAttribute(PAGE_TITLE_ATTRIBUTE, "Edit Book");
+        if (book.getBookCover() != null) {
+            String base64Image = Base64.getEncoder().encodeToString(book.getBookCover());
+            model.addAttribute("base64Image", base64Image);
+        }
         return "edit";
     }
 
     @PostMapping("/update/{id}")
-    public String updateBook(@PathVariable Long id, Book book) {
-        bookService.findById(id).map(
-                existingBook -> {
-                    existingBook.setTitle(book.getTitle());
-                    existingBook.setAuthor(book.getAuthor());
-                    existingBook.setPublisher(book.getPublisher());
-                    existingBook.setYear(book.getYear());
-                    existingBook.setPrice(book.getPrice());
-                    bookService.save(existingBook);
-                    return REDIRECT_BOOKS;
-                }
-        ).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        return REDIRECT_BOOKS;
+    public String updateBook(@PathVariable Long id, Book book, @RequestParam("image") MultipartFile imageData) {
+        Optional<Book> optionalBook = bookService.findById(id);
+
+        if (optionalBook.isPresent()) {
+            Book existingBook = optionalBook.get();
+
+            existingBook.setTitle(book.getTitle());
+            existingBook.setAuthor(book.getAuthor());
+            existingBook.setPublisher(book.getPublisher());
+            existingBook.setYear(book.getYear());
+            existingBook.setPrice(book.getPrice());
+
+            byte[] processedImageData = ImageUtils.processImageData(imageData);
+            existingBook.setBookCover(processedImageData);
+
+            bookService.save(existingBook);
+
+            return REDIRECT_BOOKS;
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
     }
+
 
     @GetMapping("/delete/{id}")
     public String deleteBook(@PathVariable Long id) {

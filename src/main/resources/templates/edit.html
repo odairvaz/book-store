@@ -1,43 +1,51 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <th:block th:insert="~{fragments/headerFragment.html}" />
-  </head>
-  <body>
-    <head th:insert="~{fragments/navbarFragment.html}"></head>
-    <div class="container">
-      <div class="row">
-        <div class="col-md-12">
-          <h1 class="display-4 text-center">Edit Book</h1>
-          <hr />
-          <form th:object="${book}" th:action="@{/api/v1/books/update/{id}(id=${book.id})}" method="post">
-            <input type="hidden" th:field="*{id}" />
-            <div class="form-group">
-              <label for="title">Title</label>
-              <input id="title" type="text" class="form-control" th:field="*{title}" />
-            </div>
-            <div class="form-group">
-              <label for="author">Author</label>
-              <input id="author" type="text" class="form-control" th:field="*{author}" />
-            </div>
-            <div class="form-group">
-              <label for="publisher">Publisher</label>
-              <input id="publisher" type="text" class="form-control" th:field="*{publisher}" />
-            </div>
-            <div class="form-group">
-              <label for="year">Year</label>
-              <input id="year" min="1900" step="1" th:max="${currentYear}" type="number" class="form-control" th:field="*{year}" />
-            </div>
-            <div class="form-group">
-              <label for="price">Price</label>
-              <input id="price" class="form-control" min="2" step="0.1" th:field="*{price}" type="number" />
-            </div>
-            <div class="mt-3">
-              <button type="submit" class="btn btn-primary">Save</button>
-            </div>
-          </form>
+<head>
+  <th:block th:insert="~{fragments/headerFragment.html}"/>
+</head>
+<body>
+<header th:insert="~{fragments/navbarFragment.html}"></header>
+<div class="container d-flex justify-content-center" style="min-height: 100vh;">
+  <div class="row">
+    <div class="col-md-12">
+      <h1 class="display-4 text-center">Edit Book</h1>
+      <hr/>
+      <form th:object="${book}" th:action="@{/api/v1/books/update/{id}(id=${book.id})}" method="post" enctype="multipart/form-data">
+        <input type="hidden" th:field="*{id}" />
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input id="title" type="text" class="form-control" th:field="*{title}" />
         </div>
-      </div>
+        <div class="form-group">
+          <label for="author">Author</label>
+          <input id="author" type="text" class="form-control" th:field="*{author}" />
+        </div>
+        <div class="form-group">
+          <label for="publisher">Publisher</label>
+          <input id="publisher" type="text" class="form-control" th:field="*{publisher}" />
+        </div>
+        <div class="form-group">
+          <label for="year">Year</label>
+          <input id="year" min="1900" step="1" th:max="${currentYear}" type="number" class="form-control" th:field="*{year}" />
+        </div>
+        <div class="form-group">
+          <label for="price">Price</label>
+          <input id="price" class="form-control" min="2" step="0.1" th:field="*{price}" type="number" />
+        </div>
+        <div class="form-group">
+          <img th:if="${book.bookCover}" th:src="${'data:image/png;base64,' + base64Image}"
+               th:alt="${book.title}" style="max-height: 200px; max-width: 200px;" />
+        </div>
+        <div class="form-group">
+          <label for="image">Change Image:</label>
+          <input type="file" class="form-control" id="image" name="image" accept="image/png, image/jpeg" />
+        </div>
+        <div class="mt-3">
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
     </div>
-  </body>
+  </div>
+</div>
+</body>
 </html>
