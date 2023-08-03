@@ -4,45 +4,28 @@
     <th:block th:insert="~{fragments/headerFragment.html}"/>
 </head>
 <body>
-    <head th:insert="~{fragments/navbarFragment.html}"></head>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <h1 class="display-4 text-center">Book Details</h1>
-                <hr/>
-                <table class="table table-bordered table-hover">
-                    <tbody>
-                    <tr>
-                        <td>Title</td>
-                        <td th:text="${book.title}">Title</td>
-                    </tr>
-                    <tr>
-                        <td>Author</td>
-                        <td th:text="${book.author}">Author</td>
-                    </tr>
-                    <tr>
-                        <td>Publisher</td>
-                        <td th:text="${book.publisher}">Publisher</td>
-                    </tr>
-                    <tr>
-                        <td>Year</td>
-                        <td th:text="${book.year}">Year</td>
-                    </tr>
-                    <tr>
-                        <td>Image</td>
-                        <td>
-                            <img th:if="${book.imageData}" th:attr="src=${'data:image/png;base64,' + T(java.util.Base64).getEncoder().encodeToString(book.imageData)}"
-                                 alt="Book Image" style="max-height: 200px; max-width: 200px;" />
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-                <div class="btn-group" role="group">
-                    <a class="btn btn-primary me-2" th:href="@{/api/v1/books/edit/{id}(id=${book.id})}">Edit</a>
-                    <a class="btn btn-danger" th:href="@{/api/v1/books/delete/{id}(id=${book.id})}">Delete</a>
+<header th:insert="~{fragments/navbarFragment.html}"></header>
+<div class="container d-flex justify-content-center" style="min-height: 100vh;">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="display-4 text-center">Book Details</h1>
+            <hr/>
+            <div class="card" style="width: 18rem;">
+                <img th:if="${book.imageData}" th:src="${'data:image/png;base64,' + base64Image}"
+                     th:alt="${book.title}" style="max-height: 200px; max-width: 200px;" />
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${book.title}">Title</h5>
+                    <p class="card-text">Author: <span th:text="${book.author}">Author</span></p>
+                    <p class="card-text">Publisher: <span th:text="${book.publisher}">Publisher</span></p>
+                    <p class="card-text">Year: <span th:text="${book.year}">Year</span></p>
+                    <div class="btn-group" role="group">
+                        <a class="btn btn-primary me-2" th:href="@{/api/v1/books/edit/{id}(id=${book.id})}">Edit</a>
+                        <a class="btn btn-danger" th:href="@{/api/v1/books/delete/{id}(id=${book.id})}">Delete</a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </body>
 </html>
