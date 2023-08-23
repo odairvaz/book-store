@@ -12,11 +12,46 @@
                 <table class="table table-hover table-responsive-xl">
                     <thead class="thead-light">
                     <tr>
-                        <th>Title</th>
-                        <th>Author</th>
-                        <th>Publisher</th>
-                        <th>Year</th>
-                        <th>Price</th>
+                        <th>
+                            <a th:href="@{/api/v1/books(page=${currentPage}, size=${pageSize}, sortField='title', sortDirection=${sortDirection == 'asc' ? 'desc' : 'asc'})}"
+                               th:text="Title"></a>
+                            <span th:if="${sortField == 'title'}">
+                                <span th:if="${sortDirection == 'asc'}">▲</span>
+                                <span th:if="${sortDirection == 'desc'}">▼</span>
+                            </span>
+                        </th>
+                        <th>
+                            <a th:href="@{/api/v1/books(page=${currentPage}, size=${pageSize}, sortField='author', sortDirection=${sortDirection == 'asc' ? 'desc' : 'asc'})}"
+                               th:text="Author"></a>
+                            <span th:if="${sortField == 'author'}">
+                                <span th:if="${sortDirection == 'asc'}">▲</span>
+                                <span th:if="${sortDirection == 'desc'}">▼</span>
+                            </span>
+                        </th>
+                        <th>
+                            <a th:href="@{/api/v1/books(page=${currentPage}, size=${pageSize}, sortField='publisher', sortDirection=${sortDirection == 'asc' ? 'desc' : 'asc'})}"
+                               th:text="Publisher"></a>
+                            <span th:if="${sortField == 'publisher'}">
+                                <span th:if="${sortDirection == 'asc'}">▲</span>
+                                <span th:if="${sortDirection == 'desc'}">▼</span>
+                            </span>
+                        </th>
+                        <th>
+                            <a th:href="@{/api/v1/books(page=${currentPage}, size=${pageSize}, sortField='year', sortDirection=${sortDirection == 'asc' ? 'desc' : 'asc'})}"
+                               th:text="Year"></a>
+                            <span th:if="${sortField == 'year'}">
+                                <span th:if="${sortDirection == 'asc'}">▲</span>
+                                <span th:if="${sortDirection == 'desc'}">▼</span>
+                            </span>
+                        </th>
+                        <th>
+                            <a th:href="@{/api/v1/books(page=${currentPage}, size=${pageSize}, sortField='price', sortDirection=${sortDirection == 'asc' ? 'desc' : 'asc'})}"
+                               th:text="Price"></a>
+                            <span th:if="${sortField == 'price'}">
+                                <span th:if="${sortDirection == 'asc'}">▲</span>
+                                <span th:if="${sortDirection == 'desc'}">▼</span>
+                            </span>
+                        </th>
                         <th>Action</th>
                     </tr>
                     </thead>
@@ -46,26 +81,26 @@
     <nav aria-label="Pagination" th:if="${totalPages > 0}">
         <ul class="pagination justify-content-center">
             <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                <a th:replace="~{fragments/paging :: paging(1, '<<', 'First Page')}"></a>
+                <a th:replace="~{fragments/paging :: paging(1, '<<', 'First Page', ${sortField}, ${sortDirection})}"></a>
             </li>
             <li class="page-item font-weight-bold" th:classappend="${currentPage == 1} ? 'disabled'">
-                <a th:replace="~{fragments/paging :: paging(${currentPage - 1}, 'Prev', 'Previous Page')}"></a>
+                <a th:replace="~{fragments/paging :: paging(${currentPage - 1}, 'Prev', 'Previous Page', ${sortField}, ${sortDirection})}"></a>
             </li>
             <li class="page-item disabled" th:if="${currentPage - 2 > 1}">
                 <a class="page-link" href="#">...</a>
             </li>
             <li class="page-item" th:classappend="${page == currentPage} ? 'active'"
                 th:each="page : ${#numbers.sequence(currentPage > 2 ? currentPage - 2 : 1, currentPage + 2 < totalPages ? currentPage + 2 : totalPages)}">
-                <a th:replace="~{fragments/paging :: paging(${page}, ${page}, 'Page ' + ${page})}"></a>
+                <a th:replace="~{fragments/paging :: paging(${page}, ${page}, 'Page ' + ${page}, ${sortField}, ${sortDirection})}"></a>
             </li>
             <li class="page-item disabled" th:if="${currentPage + 2 < totalPages}">
                 <a class="page-link" href="#">...</a>
             </li>
             <li class="page-item font-weight-bold" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                <a th:replace="~{fragments/paging :: paging(${currentPage + 1},'Next', 'Next Page')}"></a>
+                <a th:replace="~{fragments/paging :: paging(${currentPage + 1},'Next', 'Next Page', ${sortField}, ${sortDirection})}"></a>
             </li>
             <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                <a th:replace="~{fragments/paging :: paging(${totalPages}, '>>', 'Last Page')}"></a>
+                <a th:replace="~{fragments/paging :: paging(${totalPages}, '>>', 'Last Page', ${sortField}, ${sortDirection})}"></a>
             </li>
         </ul>
     </nav>
