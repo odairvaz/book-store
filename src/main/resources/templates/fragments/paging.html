@@ -1,5 +1,5 @@
-<a th:fragment="paging(pageNum, label, tooltip)" class="page-link"
-   th:href="@{'/api/v1/books?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} + 'page=' + ${pageNum} + '&size=' + ${pageSize}}"
+<a th:fragment="paging(pageNum, label, tooltip, sortField, sortDirection)" class="page-link"
+   th:href="@{'/api/v1/books?' + ${keyword != null and keyword != '' ? 'keyword=' + keyword + '&' : ''} + 'page=' + ${pageNum} + '&size=' + ${pageSize} + '&sortField=' + ${sortField} + '&sortDirection=' + ${sortDirection}}"
    th:title="${tooltip}" rel="tooltip">
     [[${label}]]
 </a>

@@ -10,6 +10,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -59,9 +60,12 @@ class BookControllerTest {
     @Test
     void givenKeyword_whenHome_thenReturnsHomePage() throws Exception {
         String keyword = "Spring";
+        String sortField = "title";
+        String sortDirection = "asc";
         int page = 1;
         int size = 3;
-        Pageable pageable = PageRequest.of(0, size);
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+        Pageable pageable = PageRequest.of(0, size, sort);
 
         Page<Book> mockPage = mock(Page.class);
         when(mockPage.getContent()).thenReturn(Collections.emptyList());
@@ -73,10 +77,12 @@ class BookControllerTest {
         mockMvc.perform(get("/api/v1/books")
                         .param("keyword", keyword)
                         .param("page", String.valueOf(page))
-                        .param("size", String.valueOf(size)))
+                        .param("size", String.valueOf(size))
+                        .param("sortField", sortField)
+                        .param("sortDirection", sortDirection))
                 .andExpect(status().isOk())
                 .andExpect(view().name("home"))
-                .andExpect(model().attributeExists("books", "pageSize", "currentPage", "totalItems", "totalPages"))
+                .andExpect(model().attributeExists("books", "pageSize", "currentPage", "totalItems", "totalPages", "sortField", "sortDirection"))
                 .andExpect(model().attribute("keyword", keyword));
         verify(bookService).findByTitleContainingIgnoreCase(keyword, pageable);
     }
@@ -85,7 +91,10 @@ class BookControllerTest {
     void givenNoKeyword_whenHome_thenReturnsHomePage() throws Exception {
         int page = 1;
         int size = 3;
-        Pageable pageable = PageRequest.of(0, size);
+        String sortField = "title";
+        String sortDirection = "asc";
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+        Pageable pageable = PageRequest.of(0, size, sort);
 
         Page<Book> mockPage = mock(Page.class);
         when(mockPage.getContent()).thenReturn(Collections.emptyList());
@@ -96,10 +105,12 @@ class BookControllerTest {
 
         mockMvc.perform(get("/api/v1/books")
                         .param("page", String.valueOf(page))
-                        .param("size", String.valueOf(size)))
+                        .param("size", String.valueOf(size))
+                        .param("sortField", sortField)
+                        .param("sortDirection", sortDirection))
                 .andExpect(status().isOk())
                 .andExpect(view().name("home"))
-                .andExpect(model().attributeExists("books", "pageSize", "currentPage", "totalItems", "totalPages"));
+                .andExpect(model().attributeExists("books", "pageSize", "currentPage", "totalItems", "totalPages", "sortField", "sortDirection"));
         verify(bookService).findAll(pageable);
     }
 

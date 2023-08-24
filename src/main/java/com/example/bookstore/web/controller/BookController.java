@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -37,10 +38,11 @@ public class BookController {
     }
 
     @GetMapping
-    public String home(Model model, @Param("keyword") String keyword, @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "3") int size) {
-        Pageable paging = PageRequest.of(page - 1, size);
+    public String home(Model model, @Param("keyword") String keyword, @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "3") int size,
+                        @RequestParam(defaultValue = "title") String sortField, @RequestParam(defaultValue = "asc") String sortDirection) {
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortField);
+        Pageable paging = PageRequest.of(page - 1, size, sort);
         Page<Book> pageBooks;
-
         if (StringUtils.hasLength(keyword)) {
             pageBooks = bookService.findByTitleContainingIgnoreCase(keyword, paging);
             model.addAttribute("keyword", keyword);
@@ -53,6 +55,8 @@ public class BookController {
         model.addAttribute("currentPage", pageBooks.getNumber() + 1);
         model.addAttribute("totalItems", pageBooks.getTotalElements());
         model.addAttribute("totalPages", pageBooks.getTotalPages());
+        model.addAttribute("sortField", sortField);
+        model.addAttribute("sortDirection", sortDirection);
         return "home";
     }
 
@@ -70,10 +74,8 @@ public class BookController {
         if (bindingResult.hasErrors()) {
             return "add";
         }
-
         byte[] processedImageData = ImageUtils.processImageData(imageData);
         book.setBookCover(processedImageData);
-
         bookService.save(book);
         return REDIRECT_BOOKS;
     }
@@ -106,27 +108,21 @@ public class BookController {
     @PostMapping("/update/{id}")
     public String updateBook(@PathVariable Long id, Book book, @RequestParam("image") MultipartFile imageData) {
         Optional<Book> optionalBook = bookService.findById(id);
-
         if (optionalBook.isPresent()) {
             Book existingBook = optionalBook.get();
-
             existingBook.setTitle(book.getTitle());
             existingBook.setAuthor(book.getAuthor());
             existingBook.setPublisher(book.getPublisher());
             existingBook.setYear(book.getYear());
             existingBook.setPrice(book.getPrice());
-
             byte[] processedImageData = ImageUtils.processImageData(imageData);
             existingBook.setBookCover(processedImageData);
-
             bookService.save(existingBook);
-
             return REDIRECT_BOOKS;
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
     }
-
 
     @GetMapping("/delete/{id}")
     public String deleteBook(@PathVariable Long id) {
