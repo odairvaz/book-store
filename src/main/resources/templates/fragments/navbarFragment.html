@@ -5,25 +5,55 @@
                 class="navbar-toggler" data-bs-target="#navbarSupportedContent" data-bs-toggle="collapse" type="button">
             <span class="navbar-toggler-icon"></span>
         </button>
+
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a aria-current="page" class="nav-link active text-white" th:href="${baseUrl}">Home</a>
+                    <a aria-current="page" class="nav-link active text-white" th:href="${baseUrl}">[[#{navbar.home}]]</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white" th:href="${baseUrl + '/new'}">Add Book</a>
+                    <a class="nav-link text-white" th:href="${baseUrl + '/new'}">[[#{navbar.add}]]</a>
                 </li>
             </ul>
         </div>
+
+        <div class="me-3">
+            <select class="form-select" id="languageSelect" onchange="changeLanguage(this)">
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+            </select>
+        </div>
+
         <form th:action="${baseUrl}" class="form-inline my-2 my-lg-0">
             <div class="row">
                 <div class="col-8">
                     <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" name="keyword" th:value="${keyword}" >
                 </div>
                 <div class="col-4">
-                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">[[#{navbar.search}]]</button>
                 </div>
             </div>
         </form>
     </div>
 </nav>
+
+<script th:inline="javascript">
+    function changeLanguage(selectElement) {
+        let selectedLanguage = selectElement.value;
+        localStorage.setItem('selectedLanguage', selectedLanguage);
+        let currentUrl = window.location.href;
+        if (currentUrl.includes('lang=')) {
+            const regex = /lang=[a-z]{2}/;
+            currentUrl = currentUrl.replace(regex, 'lang=' + selectedLanguage);
+        } else {
+            currentUrl += (currentUrl.includes('?') ? '&' : '?') + 'lang=' + selectedLanguage;
+        }
+        window.location.href = currentUrl;
+    }
+
+    const storedLanguage = localStorage.getItem('selectedLanguage');
+    if (storedLanguage) {
+        document.getElementById('languageSelect').value = storedLanguage;
+    }
+</script>
+
