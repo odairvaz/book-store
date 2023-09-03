@@ -8,19 +8,19 @@
 <div class="container d-flex justify-content-center" style="min-height: 100vh;">
     <div class="row">
         <div class="col-md-12">
-            <h1 class="display-4 text-center">Book Details</h1>
+            <h1 class="display-4 text-center">[[#{label.details.form.title}]]</h1>
             <hr/>
             <div class="card" style="width: 18rem;">
                 <img th:if="${book.bookCover}" th:src="${'data:image/png;base64,' + base64Image}"
                      th:alt="${book.title}" style="max-height: 200px; max-width: 200px;" />
                 <div class="card-body">
-                    <h5 class="card-title" th:text="${book.title}">Title</h5>
-                    <p class="card-text">Author: <span th:text="${book.author}">Author</span></p>
-                    <p class="card-text">Publisher: <span th:text="${book.publisher}">Publisher</span></p>
-                    <p class="card-text">Year: <span th:text="${book.year}">Year</span></p>
+                    <h5 class="card-title" th:text="${book.title}"></h5>
+                    <p class="card-text">[[#{label.book.author}]]: <span th:text="${book.author}"></span></p>
+                    <p class="card-text">[[#{label.book.publisher}]]: <span th:text="${book.publisher}"></span></p>
+                    <p class="card-text">[[#{label.book.year}]]: <span th:text="${book.year}"></span></p>
                     <div class="btn-group" role="group">
-                        <a class="btn btn-primary me-2" th:href="@{/api/v1/books/edit/{id}(id=${book.id})}">Edit</a>
-                        <a class="btn btn-danger" th:href="@{/api/v1/books/delete/{id}(id=${book.id})}">Delete</a>
+                        <a class="btn btn-primary me-2" th:href="@{/api/v1/books/edit/{id}(id=${book.id})}">[[#{label.book.edit}]]</a>
+                        <a class="btn btn-danger" th:href="@{/api/v1/books/delete/{id}(id=${book.id})}">[[#{label.book.delete}]]</a>
                     </div>
                 </div>
             </div>
