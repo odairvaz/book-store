@@ -11,7 +11,7 @@
             <h1 class="display-4 text-center">[[#{label.details.form.title}]]</h1>
             <hr/>
             <div class="card" style="width: 18rem;">
-                <img th:if="${book.bookCover}" th:src="${'data:image/png;base64,' + base64Image}"
+                <img th:if="${base64Image}" th:src="${'data:image/png;base64,' + base64Image}"
                      th:alt="${book.title}" style="max-height: 200px; max-width: 200px;" />
                 <div class="card-body">
                     <h5 class="card-title" th:text="${book.title}"></h5>
