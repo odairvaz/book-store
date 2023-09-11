@@ -14,7 +14,7 @@
                     <tr>
                         <th>
                             <a th:href="@{/api/v1/books(page=${currentPage}, size=${pageSize}, sortField='title', sortDirection=${sortDirection == 'asc' ? 'desc' : 'asc'})}"
-                               th:text="#{label.home.title}"></a>
+                               th:text="#{label.book.title}"></a>
                             <span th:if="${sortField == 'title'}">
                                 <span th:if="${sortDirection == 'asc'}">▲</span>
                                 <span th:if="${sortDirection == 'desc'}">▼</span>
@@ -22,7 +22,7 @@
                         </th>
                         <th>
                             <a th:href="@{/api/v1/books(page=${currentPage}, size=${pageSize}, sortField='author', sortDirection=${sortDirection == 'asc' ? 'desc' : 'asc'})}"
-                               th:text="#{label.home.author}"></a>
+                               th:text="#{label.book.author}"></a>
                             <span th:if="${sortField == 'author'}">
                                 <span th:if="${sortDirection == 'asc'}">▲</span>
                                 <span th:if="${sortDirection == 'desc'}">▼</span>
@@ -30,7 +30,7 @@
                         </th>
                         <th>
                             <a th:href="@{/api/v1/books(page=${currentPage}, size=${pageSize}, sortField='publisher', sortDirection=${sortDirection == 'asc' ? 'desc' : 'asc'})}"
-                               th:text="#{label.home.publisher}"></a>
+                               th:text="#{label.book.publisher}"></a>
                             <span th:if="${sortField == 'publisher'}">
                                 <span th:if="${sortDirection == 'asc'}">▲</span>
                                 <span th:if="${sortDirection == 'desc'}">▼</span>
@@ -38,7 +38,7 @@
                         </th>
                         <th>
                             <a th:href="@{/api/v1/books(page=${currentPage}, size=${pageSize}, sortField='year', sortDirection=${sortDirection == 'asc' ? 'desc' : 'asc'})}"
-                               th:text="#{label.home.year}"></a>
+                               th:text="#{label.book.year}"></a>
                             <span th:if="${sortField == 'year'}">
                                 <span th:if="${sortDirection == 'asc'}">▲</span>
                                 <span th:if="${sortDirection == 'desc'}">▼</span>
@@ -46,7 +46,7 @@
                         </th>
                         <th>
                             <a th:href="@{/api/v1/books(page=${currentPage}, size=${pageSize}, sortField='price', sortDirection=${sortDirection == 'asc' ? 'desc' : 'asc'})}"
-                               th:text="#{label.home.price}"></a>
+                               th:text="#{label.book.price}"></a>
                             <span th:if="${sortField == 'price'}">
                                 <span th:if="${sortDirection == 'asc'}">▲</span>
                                 <span th:if="${sortDirection == 'desc'}">▼</span>
