@@ -8,7 +8,6 @@ import java.util.Optional;
 
 public interface IBookService {
 
-
     Optional<Book> findById(Long id);
 
     Book save(Book book);
