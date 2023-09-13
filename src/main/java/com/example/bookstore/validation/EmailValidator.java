@@ -8,10 +8,22 @@ import java.util.regex.Pattern;
 
 public class EmailValidator implements ConstraintValidator<ValidEmail, String> {
     private static final String EMAIL_PATTERN = "^[A-Za-z0-9+_.-]+@(.+)$";
+    private String message;
+
+    @Override
+    public void initialize(ValidEmail constraintAnnotation) {
+        message = constraintAnnotation.message();
+    }
 
     @Override
     public boolean isValid(String email, ConstraintValidatorContext context) {
-        return validateEmail(email);
+        if (!validateEmail(email)) {
+            context.buildConstraintViolationWithTemplate(message)
+                    .addPropertyNode("email")
+                    .addConstraintViolation();
+            return false;
+        }
+        return true;
     }
 
     private boolean validateEmail(String email) {
