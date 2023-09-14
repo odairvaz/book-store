@@ -1,0 +1,42 @@
+<head xmlns:th="http://www.thymeleaf.org">
+    <th:block th:insert="~{fragments/headerFragment.html}"/>
+</head>
+<body>
+<header th:insert="~{fragments/navbarFragment.html}"></header>
+<main class="container-fluid" th:with="baseUrl=@{/api/v1/books}">
+    <div class="row">
+        <div class="mx-auto col-10 col-md-8 col-lg-6">
+            <h1 th:text="#{label.form.title}"></h1>
+
+            <form method="post" th:action="${'/api/v1/user/registration'}" th:object="${user}">
+                <div class="mb-3">
+                    <label class="form-label" for="fNameInput" th:text="#{label.user.firstName}">first</label>
+                    <input class="form-control" id="fNameInput" th:field="*{firstName}" required="required" />
+                    <p th:each="error: ${#fields.errors('firstName')}" th:text="${error}" class="mt-3 text-danger"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="lNameInput" th:text="#{label.user.lastName}">last</label>
+                    <input class="form-control" id="lNameInput" th:field="*{lastName}" required="required" />
+                    <p th:each="error : ${#fields.errors('lastName')}" th:text="${error}" class="mt-3 text-danger"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="emailInput" th:text="#{label.user.email}">email</label>
+                    <input class="form-control" id="emailInput" th:field="*{email}" type="email" required="required" />
+                    <p th:each="error : ${#fields.errors('email')}" th:text="${error}" class="mt-3 text-danger"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="passwordInput" th:text="#{label.user.password}">password</label>
+                    <input class="form-control" id="passwordInput" th:field="*{password}" type="password" required="required" />
+                    <p th:each="error : ${#fields.errors('password')}" th:text="${error}" class="mt-3 text-danger"></p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="confirmPasswordInput" th:text="#{label.user.confirmPass}">confirm</label>
+                    <input class="form-control" id="confirmPasswordInput" th:field="*{matchingPassword}" type="password" required="required" />
+                </div>
+                <button class="btn btn-primary" th:text="#{label.book.submit}" type="submit"></button>
+            </form>
+            <a th:href="@{/login}" th:text="#{label.form.loginLink}">login</a>
+        </div>
+    </div>
+</main>
+</body>
