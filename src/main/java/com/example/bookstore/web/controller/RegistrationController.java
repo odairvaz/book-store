@@ -21,7 +21,7 @@ import java.util.Calendar;
 import java.util.Locale;
 
 @Controller
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api")
 public class RegistrationController {
 
     public static final String REGISTRATION_PAGE = "registration";
@@ -43,7 +43,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/registration")
-    public String registerUserAccount(@ModelAttribute("user") @Valid UserDto userDto, HttpServletRequest request, BindingResult bindingResult, Model model) {
+    public String registerUserAccount(@ModelAttribute("user") @Valid UserDto userDto, HttpServletRequest request, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return REGISTRATION_PAGE;
         }
@@ -53,34 +53,47 @@ public class RegistrationController {
             String appUrl = request.getContextPath();
             eventPublisher.publishEvent(new OnRegistrationCompleteEvent(newUserAccount, request.getLocale(), appUrl));
         } catch (UserAlreadyExistException uaeEx) {
-            bindingResult.rejectValue("email", "error.user", "An account with the email already exists.");
+            bindingResult.rejectValue("email", "error.user");
             return REGISTRATION_PAGE;
         }
         return "successRegister";
     }
 
-    @GetMapping("/regitrationConfirm")
-    public String confirmRegistration (WebRequest request, Model model, @RequestParam("token") String token) {
+    @GetMapping("/registrationConfirm")
+    public String confirmRegistration (WebRequest request, @RequestParam("token") String token) {
         Locale locale = request.getLocale();
 
         VerificationToken verificationToken = userService.getVerificationToken(token);
         if (verificationToken == null) {
-            String message = messages.getMessage("auth.message.invalidToken", null, locale);
-            model.addAttribute("message", message);
-            return "redirect:/badUser.html?lang=" + locale.getLanguage();
+            return "redirect:/api/badUser?lang=" + locale.getLanguage() + "&error=invalid_token";
         }
 
         User user = verificationToken.getUser();
         Calendar cal = Calendar.getInstance();
         if ((verificationToken.getExpiryDate().getTime() - cal.getTime().getTime()) <= 0) {
-            String messageValue = messages.getMessage("auth.message.expired", null, locale);
-            model.addAttribute("message", messageValue);
-            return "redirect:/badUser.html?lang=" + locale.getLanguage();
+            return "redirect:/api/badUser?lang=" + locale.getLanguage() + "&error=expired_token";
         }
 
         user.setEnabled(true);
         userService.saveRegisteredUser(user);
-        return "redirect:/login.html?lang=" + request.getLocale().getLanguage();
+        return "redirect:/login?lang=" + locale.getLanguage();
     }
+
+    @GetMapping("/badUser")
+    public String badUser(@RequestParam("error") String errorCode, Model model, Locale locale) {
+        String errorMessage = getErrorCode(errorCode, locale);
+        model.addAttribute("errorMessage", errorMessage);
+        return "badUser";
+    }
+
+
+    private String getErrorCode(String errorCode, Locale locale) {
+        return switch (errorCode) {
+            case "expired_token" -> messages.getMessage("auth.message.expired", null, locale);
+            case "invalid_token" -> messages.getMessage("auth.message.invalidToken", null, locale);
+            default -> "An error occurred.";
+        };
+    }
+
 
 }
