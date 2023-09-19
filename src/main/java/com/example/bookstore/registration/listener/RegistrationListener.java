@@ -5,8 +5,8 @@ import com.example.bookstore.registration.OnRegistrationCompleteEvent;
 import com.example.bookstore.service.IUserService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.MessageSource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
@@ -19,16 +19,16 @@ import java.util.UUID;
 public class RegistrationListener implements ApplicationListener<OnRegistrationCompleteEvent> {
 
     private final IUserService service;
-    private final MessageSource messages;
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
+    private final HttpServletRequest request;
 
 
-    public RegistrationListener(IUserService service, MessageSource messages, JavaMailSender mailSender, TemplateEngine templateEngine) {
+    public RegistrationListener(IUserService service, JavaMailSender mailSender, TemplateEngine templateEngine, HttpServletRequest request) {
         this.service = service;
-        this.messages = messages;
         this.mailSender = mailSender;
         this.templateEngine = templateEngine;
+        this.request = request;
     }
 
     @Override
@@ -40,17 +40,17 @@ public class RegistrationListener implements ApplicationListener<OnRegistrationC
         User user = event.getUser();
         String token = UUID.randomUUID().toString();
         service.createVerificationToken(user, token);
+        String baseUrl = request.getRequestURL().toString().replace(request.getRequestURI(), request.getContextPath());
 
         String recipientAddress = user.getEmail();
         String subject = "Registration Confirmation";
-        String confirmationUrl = event.getAppUrl() + "/api/registrationConfirm?token=" + token;
+        String confirmationUrl = baseUrl + "/api/registrationConfirm?token=" + token;
 
         Context thymeleafContext = new Context(event.getLocale());
         thymeleafContext.setVariable("user", user);
-        thymeleafContext.setVariable("message", messages.getMessage("message.regSucc", null, event.getLocale()));
         thymeleafContext.setVariable("confirmationUrl", confirmationUrl);
 
-        String emailContent = templateEngine.process("registration-email", thymeleafContext);
+        String emailContent = templateEngine.process("registration/registration-email", thymeleafContext);
 
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         try {
@@ -59,19 +59,8 @@ public class RegistrationListener implements ApplicationListener<OnRegistrationC
             helper.setSubject(subject);
             helper.setText(emailContent, true);
 
-            // Send the HTML email
             mailSender.send(mimeMessage);
         } catch (MessagingException e) {
-            // Handle the exception
         }
-
-
-        /*String message = messages.getMessage("message.regSucc", null, event.getLocale());
-
-        SimpleMailMessage email = new SimpleMailMessage();
-        email.setTo(recipientAddress);
-        email.setSubject(subject);
-        email.setText(message + "\r\n" + "http://localhost:8080" + confirmationUrl);
-        mailSender.send(email);*/
     }
 }

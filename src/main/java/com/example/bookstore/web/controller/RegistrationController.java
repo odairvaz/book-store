@@ -15,7 +15,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.request.WebRequest;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -24,7 +23,7 @@ import java.util.Locale;
 @RequestMapping("/api")
 public class RegistrationController {
 
-    public static final String REGISTRATION_PAGE = "registration";
+    public static final String REGISTRATION_PAGE = "registration/registration";
     private final IUserService userService;
     private final ApplicationEventPublisher eventPublisher;
     private final MessageSource messages;
@@ -43,7 +42,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/registration")
-    public String registerUserAccount(@ModelAttribute("user") @Valid UserDto userDto, HttpServletRequest request, BindingResult bindingResult) {
+    public String registerUserAccount(@ModelAttribute("user") @Valid UserDto userDto, HttpServletRequest request, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
             return REGISTRATION_PAGE;
         }
@@ -53,39 +52,45 @@ public class RegistrationController {
             String appUrl = request.getContextPath();
             eventPublisher.publishEvent(new OnRegistrationCompleteEvent(newUserAccount, request.getLocale(), appUrl));
         } catch (UserAlreadyExistException uaeEx) {
-            bindingResult.rejectValue("email", "error.user");
+            bindingResult.rejectValue("email", "error.user", "There is already a user registered with the email provided.");
             return REGISTRATION_PAGE;
         }
-        return "successRegister";
+        model.addAttribute("successMessage", messages.getMessage("message.register.success", null, request.getLocale()));
+        return "registration/success-register";
     }
 
     @GetMapping("/registrationConfirm")
-    public String confirmRegistration (WebRequest request, @RequestParam("token") String token) {
+    public String confirmRegistration(HttpServletRequest request, @RequestParam("token") String token, Model model) {
         Locale locale = request.getLocale();
 
         VerificationToken verificationToken = userService.getVerificationToken(token);
         if (verificationToken == null) {
-            return "redirect:/api/badUser?lang=" + locale.getLanguage() + "&error=invalid_token";
+            return "redirect:/api/bad-user?lang=" + locale.getLanguage() + "&error=invalid_token";
         }
 
         User user = verificationToken.getUser();
         Calendar cal = Calendar.getInstance();
         if ((verificationToken.getExpiryDate().getTime() - cal.getTime().getTime()) <= 0) {
-            return "redirect:/api/badUser?lang=" + locale.getLanguage() + "&error=expired_token";
+            return "redirect:/api/bad-user?lang=" + locale.getLanguage() + "&error=expired_token";
         }
 
         user.setEnabled(true);
         userService.saveRegisteredUser(user);
-        return "redirect:/login?lang=" + locale.getLanguage();
+        return "redirect:/api/success-register?lang=" + locale.getLanguage();
     }
 
-    @GetMapping("/badUser")
+    @GetMapping("/success-register")
+    public String successRegister(Model model, HttpServletRequest request) {
+        model.addAttribute("successMessage", messages.getMessage("message.activated.success", null, request.getLocale()));
+        return "registration/success-register";
+    }
+
+    @GetMapping("/bad-user")
     public String badUser(@RequestParam("error") String errorCode, Model model, Locale locale) {
         String errorMessage = getErrorCode(errorCode, locale);
         model.addAttribute("errorMessage", errorMessage);
-        return "badUser";
+        return "registration/bad-user";
     }
-
 
     private String getErrorCode(String errorCode, Locale locale) {
         return switch (errorCode) {
@@ -94,6 +99,5 @@ public class RegistrationController {
             default -> "An error occurred.";
         };
     }
-
 
 }
