@@ -42,7 +42,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/registration")
-    public String registerUserAccount(@ModelAttribute("user") @Valid UserDto userDto, HttpServletRequest request, BindingResult bindingResult, Model model) {
+    public String registerUserAccount(@ModelAttribute("user") @Valid UserDto userDto,BindingResult bindingResult, HttpServletRequest request, Model model) {
         if (bindingResult.hasErrors()) {
             return REGISTRATION_PAGE;
         }
