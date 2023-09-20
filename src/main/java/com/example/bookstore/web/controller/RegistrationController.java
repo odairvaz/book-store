@@ -24,12 +24,11 @@ import java.util.Locale;
 @Controller
 @RequestMapping("/api")
 public class RegistrationController {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationController.class);
     private static final String REGISTRATION_PAGE = "registration/registration";
     private static final String SUCCESS_REGISTER_PAGE = "registration/success-register";
     private static final String BAD_USER_PAGE = "registration/bad-user";
     private static final String ERROR_REGISTRATION_PAGE = "registration/error-registration";
-    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     private final IUserService userService;
     private final ApplicationEventPublisher eventPublisher;
     private final MessageSource messages;
