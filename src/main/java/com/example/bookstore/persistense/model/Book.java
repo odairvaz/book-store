@@ -30,15 +30,6 @@ public class Book {
 
     public Book() {}
 
-    public Book(String title, String author, String publisher, int year, double price, byte[] bookCover) {
-        this.title = title;
-        this.author = author;
-        this.publisher = publisher;
-        this.year = year;
-        this.price = price;
-        this.bookCover = bookCover;
-    }
-
     public Long getId() {
         return id;
     }

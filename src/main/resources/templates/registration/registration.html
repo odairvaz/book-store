@@ -8,7 +8,7 @@
         <div class="mx-auto col-10 col-md-8 col-lg-6">
             <h1 th:text="#{label.form.title}"></h1>
 
-            <form method="post" th:action="${'/api/v1/user/registration'}" th:object="${user}">
+            <form method="post" th:action="${'/api/registration'}" th:object="${user}">
                 <div class="mb-3">
                     <label class="form-label" for="fNameInput" th:text="#{label.user.firstName}">first</label>
                     <input class="form-control" id="fNameInput" th:field="*{firstName}" required="required" />

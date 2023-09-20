@@ -4,7 +4,9 @@
 <body>
 <header th:insert="~{fragments/navbarFragment.html}"></header>
 <div class="container">
-    <h1 class="mt-5 alert alert-success" th:text="#{message.regSucc}">success</h1>
+    <div class="mt-5 alert alert-success" th:if="${successMessage}">
+        <p th:text="${successMessage}"></p>
+    </div>
     <a th:href="@{/login}" th:text="#{label.form.loginLink}">login</a>
 </div>
 </body>

@@ -1,8 +1,10 @@
 package com.example.bookstore.service.impl;
 
 import com.example.bookstore.persistense.model.User;
+import com.example.bookstore.persistense.model.VerificationToken;
 import com.example.bookstore.persistense.repository.IRoleRepository;
 import com.example.bookstore.persistense.repository.IUserRepository;
+import com.example.bookstore.persistense.repository.VerificationTokenRepository;
 import com.example.bookstore.service.IUserService;
 import com.example.bookstore.web.dto.UserDto;
 import com.example.bookstore.web.error.UserAlreadyExistException;
@@ -17,10 +19,12 @@ public class IUserServiceImpl implements IUserService {
 
     private final IUserRepository userRepository;
     private final IRoleRepository roleRepository;
+    private VerificationTokenRepository tokenRepository;
 
-    public IUserServiceImpl(IUserRepository userRepository, IRoleRepository roleRepository) {
+    public IUserServiceImpl(IUserRepository userRepository, IRoleRepository roleRepository, VerificationTokenRepository tokenRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.tokenRepository = tokenRepository;
     }
 
     @Override
@@ -40,5 +44,26 @@ public class IUserServiceImpl implements IUserService {
 
     private boolean emailExists(final String email) {
         return userRepository.findByEmail(email) != null;
+    }
+
+    @Override
+    public void createVerificationToken(final User user, final String token) {
+        final VerificationToken myToken = new VerificationToken(token, user);
+        tokenRepository.save(myToken);
+    }
+
+    @Override
+    public User getUser(String verificationToken) {
+        return tokenRepository.findByToken(verificationToken).getUser();
+    }
+
+    @Override
+    public void saveRegisteredUser(User user) {
+        userRepository.save(user);
+    }
+
+    @Override
+    public VerificationToken getVerificationToken(String verificationToken) {
+        return tokenRepository.findByToken(verificationToken);
     }
 }
