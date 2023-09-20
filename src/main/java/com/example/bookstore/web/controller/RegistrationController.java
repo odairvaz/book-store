@@ -62,7 +62,7 @@ public class RegistrationController {
             return REGISTRATION_PAGE;
         } catch (RuntimeException ex) {
             LOGGER.warn("Unable to register user", ex);
-            model.addAttribute("errorMessage", "An error occurred during registration. Please try again!");
+            model.addAttribute("errorMessage", "An error occurred when sending the email!");
             return ERROR_REGISTRATION_PAGE;
         }
         model.addAttribute("successMessage", messages.getMessage("message.register.success", null, request.getLocale()));
