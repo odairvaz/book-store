@@ -9,6 +9,8 @@ import com.example.bookstore.web.dto.UserDto;
 import com.example.bookstore.web.error.UserAlreadyExistException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
@@ -23,7 +25,11 @@ import java.util.Locale;
 @RequestMapping("/api")
 public class RegistrationController {
 
-    public static final String REGISTRATION_PAGE = "registration/registration";
+    private static final String REGISTRATION_PAGE = "registration/registration";
+    private static final String SUCCESS_REGISTER_PAGE = "registration/success-register";
+    private static final String BAD_USER_PAGE = "registration/bad-user";
+    private static final String ERROR_REGISTRATION_PAGE = "registration/error-registration";
+    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     private final IUserService userService;
     private final ApplicationEventPublisher eventPublisher;
     private final MessageSource messages;
@@ -36,13 +42,13 @@ public class RegistrationController {
 
     @GetMapping("/registration")
     public String showRegistrationForm(Model model) {
-        UserDto userDto = new UserDto();
-        model.addAttribute("user", userDto);
+        model.addAttribute("user", new UserDto());
         return REGISTRATION_PAGE;
     }
 
     @PostMapping("/registration")
-    public String registerUserAccount(@ModelAttribute("user") @Valid UserDto userDto,BindingResult bindingResult, HttpServletRequest request, Model model) {
+    public String registerUserAccount(@ModelAttribute("user") @Valid UserDto userDto, BindingResult bindingResult, HttpServletRequest request, Model model) {
+
         if (bindingResult.hasErrors()) {
             return REGISTRATION_PAGE;
         }
@@ -54,24 +60,29 @@ public class RegistrationController {
         } catch (UserAlreadyExistException uaeEx) {
             bindingResult.rejectValue("email", "error.user", "There is already a user registered with the email provided.");
             return REGISTRATION_PAGE;
+        } catch (RuntimeException ex) {
+            LOGGER.warn("Unable to register user", ex);
+            model.addAttribute("errorMessage", "An error occurred during registration. Please try again!");
+            return ERROR_REGISTRATION_PAGE;
         }
         model.addAttribute("successMessage", messages.getMessage("message.register.success", null, request.getLocale()));
-        return "registration/success-register";
+        return SUCCESS_REGISTER_PAGE;
     }
 
     @GetMapping("/registrationConfirm")
-    public String confirmRegistration(HttpServletRequest request, @RequestParam("token") String token, Model model) {
+    public String confirmRegistration(HttpServletRequest request, @RequestParam("token") String token) {
         Locale locale = request.getLocale();
-
         VerificationToken verificationToken = userService.getVerificationToken(token);
+
         if (verificationToken == null) {
-            return "redirect:/api/bad-user?lang=" + locale.getLanguage() + "&error=invalid_token";
+            return redirectToBadUser("invalid_token", locale);
         }
 
         User user = verificationToken.getUser();
         Calendar cal = Calendar.getInstance();
+
         if ((verificationToken.getExpiryDate().getTime() - cal.getTime().getTime()) <= 0) {
-            return "redirect:/api/bad-user?lang=" + locale.getLanguage() + "&error=expired_token";
+            return redirectToBadUser("expired_token", locale);
         }
 
         user.setEnabled(true);
@@ -82,14 +93,18 @@ public class RegistrationController {
     @GetMapping("/success-register")
     public String successRegister(Model model, HttpServletRequest request) {
         model.addAttribute("successMessage", messages.getMessage("message.activated.success", null, request.getLocale()));
-        return "registration/success-register";
+        return SUCCESS_REGISTER_PAGE;
     }
 
     @GetMapping("/bad-user")
     public String badUser(@RequestParam("error") String errorCode, Model model, Locale locale) {
         String errorMessage = getErrorCode(errorCode, locale);
         model.addAttribute("errorMessage", errorMessage);
-        return "registration/bad-user";
+        return BAD_USER_PAGE;
+    }
+
+    private String redirectToBadUser(String errorCode, Locale locale) {
+        return "redirect:/api/bad-user?lang=" + locale.getLanguage() + "&error=" + errorCode;
     }
 
     private String getErrorCode(String errorCode, Locale locale) {

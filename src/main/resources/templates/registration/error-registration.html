@@ -1,0 +1,12 @@
+<head>
+    <th:block th:insert="~{fragments/headerFragment.html}"/>
+</head>
+<body>
+<header th:insert="~{fragments/navbarFragment.html}"></header>
+<body>
+    <div class="container">
+        <div class="mt-5 alert alert-danger">
+            <p th:text="${errorMessage}"></p>
+        </div>
+    </div>
+</body>
