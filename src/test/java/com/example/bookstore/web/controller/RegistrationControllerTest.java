@@ -199,7 +199,7 @@ class RegistrationControllerTest {
         when(userService.getVerificationToken(token)).thenReturn(null);
         String result = registrationController.confirmRegistration(request, token, model);
 
-        assertEquals("redirect:/api/bad-user?lang=en&error=invalid_token", result);
+        assertEquals("redirect:/api/bad-user?lang=en&token=invalid-token&error=invalid_token", result);
     }
 
     @Test
@@ -220,7 +220,7 @@ class RegistrationControllerTest {
 
         verify(userService).getVerificationToken(token);
         assertFalse(user.isEnabled());
-        assertEquals("redirect:/api/bad-user?lang=en&error=expired_token", result);
+        assertEquals("redirect:/api/bad-user?lang=en&token=expired-token&error=expired_token", result);
     }
 
     @Test
@@ -264,6 +264,48 @@ class RegistrationControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(view().name("registration/bad-user"))
                 .andExpect(model().attributeExists("errorMessage"));
+    }
+
+    @Test
+    void givenSuccessRegenerateNewTokenPageRequest_whenResendRegistrationToken_thenReturnSuccessRegenerateTokenView() throws Exception {
+        mockMvc.perform(get("/api/success-regenerate-token"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(view().name("registration/success-regenerate-token"));
+    }
+
+    @Test
+    void givenExpiredToken_whenResendRegistrationToken_thenRedirectToSuccessPage() {
+        String expiredToken = "expired-token";
+        VerificationToken newToken = new VerificationToken();
+        User user = new User();
+        user.setEmail("user@user.com");
+        newToken.setToken("new-token");
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setLocalName("en");
+        when(userService.generateNewVerificationToken(expiredToken)).thenReturn(newToken);
+        when(userService.getUser(newToken.getToken())).thenReturn(user);
+
+        String result = registrationController.resendRegistrationToken(expiredToken, request);
+
+        verify(userService).generateNewVerificationToken(expiredToken);
+        verify(userService).getUser(newToken.getToken());
+        verify(eventPublisher).publishEvent(any(OnRegistrationCompleteEvent.class));
+
+        assertEquals("redirect:/api/success-regenerate-token?lang=en", result);
+    }
+
+    @Test
+    void givenInvalidToken_whenResendRegistrationToken_thenRedirectToBadUserPage() {
+        String invalidToken = "invalid-token";
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setLocalName("en");
+        when(userService.generateNewVerificationToken(invalidToken)).thenReturn(null);
+
+        String result = registrationController.resendRegistrationToken(invalidToken, request);
+
+        assertEquals("redirect:/api/bad-user?lang=en&token=invalid-token&error=invalid_token", result);
     }
 
 }
