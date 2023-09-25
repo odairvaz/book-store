@@ -36,22 +36,28 @@ public class RegistrationListener implements ApplicationListener<OnRegistrationC
         this.confirmRegistration(event);
     }
 
-    private void confirmRegistration(OnRegistrationCompleteEvent event) {
+    public void confirmRegistration(OnRegistrationCompleteEvent event) {
         User user = event.getUser();
-        String token = UUID.randomUUID().toString();
-        service.createVerificationToken(user, token);
-        String baseUrl = request.getRequestURL().toString().replace(request.getRequestURI(), request.getContextPath());
+        String token = event.getExistingToken();
+        if (event.getExistingToken() == null) {
+            token = UUID.randomUUID().toString();
+            service.createVerificationToken(user, token);
+        }
 
+        String baseUrl = request.getRequestURL().toString().replace(request.getRequestURI(), request.getContextPath());
         String recipientAddress = user.getEmail();
         String subject = "Registration Confirmation";
-        String confirmationUrl = baseUrl + "/api/registrationConfirm?token=" + token;
+        String confirmationUrl = baseUrl + "/api/registration-confirm?token=" + token;
 
         Context thymeleafContext = new Context(event.getLocale());
         thymeleafContext.setVariable("user", user);
         thymeleafContext.setVariable("confirmationUrl", confirmationUrl);
 
         String emailContent = templateEngine.process("registration/registration-email", thymeleafContext);
+        sendMail(recipientAddress, subject, emailContent);
+    }
 
+    private void sendMail(String recipientAddress, String subject, String emailContent) {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -63,4 +69,5 @@ public class RegistrationListener implements ApplicationListener<OnRegistrationC
         } catch (MessagingException e) {
         }
     }
+
 }

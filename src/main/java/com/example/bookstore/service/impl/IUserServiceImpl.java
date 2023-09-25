@@ -12,6 +12,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -19,7 +20,7 @@ public class IUserServiceImpl implements IUserService {
 
     private final IUserRepository userRepository;
     private final IRoleRepository roleRepository;
-    private VerificationTokenRepository tokenRepository;
+    private final VerificationTokenRepository tokenRepository;
 
     public IUserServiceImpl(IUserRepository userRepository, IRoleRepository roleRepository, VerificationTokenRepository tokenRepository) {
         this.userRepository = userRepository;
@@ -50,6 +51,17 @@ public class IUserServiceImpl implements IUserService {
     public void createVerificationToken(final User user, final String token) {
         final VerificationToken myToken = new VerificationToken(token, user);
         tokenRepository.save(myToken);
+    }
+
+    @Override
+    public VerificationToken generateNewVerificationToken(String existingVerificationToken) {
+        VerificationToken vToken = tokenRepository.findByToken(existingVerificationToken);
+        if (vToken == null) {
+            return null;
+        }
+        vToken.updateToken(UUID.randomUUID().toString());
+        vToken = tokenRepository.save(vToken);
+        return vToken;
     }
 
     @Override

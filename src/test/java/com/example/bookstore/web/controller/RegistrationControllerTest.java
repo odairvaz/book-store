@@ -174,12 +174,13 @@ class RegistrationControllerTest {
         user.setEnabled(false);
         verificationToken.setUser(user);
         verificationToken.setExpiryDate(new Date(System.currentTimeMillis() + 86400_000));
+        Model model = mock(Model.class);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setLocalName(Locale.ENGLISH.getLanguage());
 
         when(userService.getVerificationToken(token)).thenReturn(verificationToken);
-        String result = registrationController.confirmRegistration(request, token);
+        String result = registrationController.confirmRegistration(request, token, model);
 
         verify(userService).getVerificationToken(token);
         verify(userService).saveRegisteredUser(user);
@@ -191,12 +192,12 @@ class RegistrationControllerTest {
     @Test
     void givenInvalidToken_whenConfirmRegistration_thenRedirectToBadUserPage() {
         String token = "invalid-token";
-
+        Model model = mock(Model.class);
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setLocalName(Locale.ENGLISH.getLanguage());
 
         when(userService.getVerificationToken(token)).thenReturn(null);
-        String result = registrationController.confirmRegistration(request, token);
+        String result = registrationController.confirmRegistration(request, token, model);
 
         assertEquals("redirect:/api/bad-user?lang=en&error=invalid_token", result);
     }
@@ -210,11 +211,12 @@ class RegistrationControllerTest {
         verificationToken.setUser(user);
         verificationToken.setExpiryDate(new Date(System.currentTimeMillis() - 86400_000));
 
+        Model model = mock(Model.class);
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setLocalName(Locale.ENGLISH.getLanguage());
 
         when(userService.getVerificationToken(token)).thenReturn(verificationToken);
-        String result = registrationController.confirmRegistration(request, token);
+        String result = registrationController.confirmRegistration(request, token, model);
 
         verify(userService).getVerificationToken(token);
         assertFalse(user.isEnabled());

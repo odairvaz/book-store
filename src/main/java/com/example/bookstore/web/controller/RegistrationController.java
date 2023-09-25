@@ -27,6 +27,7 @@ public class RegistrationController {
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationController.class);
     private static final String REGISTRATION_PAGE = "registration/registration";
     private static final String SUCCESS_REGISTER_PAGE = "registration/success-register";
+    private static final String SUCCESS_REGENERATE_TOKEN_PAGE = "registration/success-regenerate-token";
     private static final String BAD_USER_PAGE = "registration/bad-user";
     private static final String ERROR_REGISTRATION_PAGE = "registration/error-registration";
     private final IUserService userService;
@@ -55,7 +56,7 @@ public class RegistrationController {
         try {
             User newUserAccount = userService.registerNewUserAccount(userDto);
             String appUrl = request.getContextPath();
-            eventPublisher.publishEvent(new OnRegistrationCompleteEvent(newUserAccount, request.getLocale(), appUrl));
+            eventPublisher.publishEvent(new OnRegistrationCompleteEvent(newUserAccount, request.getLocale(), appUrl, null));
         } catch (UserAlreadyExistException uaeEx) {
             bindingResult.rejectValue("email", "error.user", "There is already a user registered with the email provided.");
             return REGISTRATION_PAGE;
@@ -68,25 +69,37 @@ public class RegistrationController {
         return SUCCESS_REGISTER_PAGE;
     }
 
-    @GetMapping("/registrationConfirm")
-    public String confirmRegistration(HttpServletRequest request, @RequestParam("token") String token) {
+    @GetMapping("/registration-confirm")
+    public String confirmRegistration(HttpServletRequest request, @RequestParam("token") String token, Model model) {
         Locale locale = request.getLocale();
         VerificationToken verificationToken = userService.getVerificationToken(token);
-
         if (verificationToken == null) {
-            return redirectToBadUser("invalid_token", locale);
+            return redirectToBadUser(token, "invalid_token", locale);
         }
 
         User user = verificationToken.getUser();
         Calendar cal = Calendar.getInstance();
-
         if ((verificationToken.getExpiryDate().getTime() - cal.getTime().getTime()) <= 0) {
-            return redirectToBadUser("expired_token", locale);
+            return redirectToBadUser(token, "expired_token", locale);
         }
 
         user.setEnabled(true);
         userService.saveRegisteredUser(user);
         return "redirect:/api/success-register?lang=" + locale.getLanguage();
+    }
+
+    @GetMapping("/resend-registration-token")
+    public String resendRegistrationToken(@RequestParam("token") String existingToken, HttpServletRequest request) {
+        Locale locale = request.getLocale();
+        VerificationToken newToken = userService.generateNewVerificationToken(existingToken);
+        if (newToken == null) {
+            return redirectToBadUser(existingToken, "invalid_token", locale);
+        }
+
+        User user = userService.getUser(newToken.getToken());
+        String appUrl = request.getContextPath();
+        eventPublisher.publishEvent(new OnRegistrationCompleteEvent(user, request.getLocale(), appUrl, newToken.getToken()));
+        return "redirect:/api/success-regenerate-token?lang=" + locale.getLanguage();
     }
 
     @GetMapping("/success-register")
@@ -95,15 +108,26 @@ public class RegistrationController {
         return SUCCESS_REGISTER_PAGE;
     }
 
+    @GetMapping("/success-regenerate-token")
+    public String successRegenerateNewToken() {
+        return SUCCESS_REGENERATE_TOKEN_PAGE;
+    }
+
     @GetMapping("/bad-user")
-    public String badUser(@RequestParam("error") String errorCode, Model model, Locale locale) {
-        String errorMessage = getErrorCode(errorCode, locale);
+    public String badUser(@RequestParam("error") String errorCode, Model model, HttpServletRequest request) {
+        VerificationToken verificationToken = userService.getVerificationToken(request.getParameter("token"));
+        String errorMessage = getErrorCode(errorCode, request.getLocale());
+        model.addAttribute("isTokenValid", true);
+        if (verificationToken == null) {
+            model.addAttribute("isTokenValid", false);
+        }
+
         model.addAttribute("errorMessage", errorMessage);
         return BAD_USER_PAGE;
     }
 
-    private String redirectToBadUser(String errorCode, Locale locale) {
-        return "redirect:/api/bad-user?lang=" + locale.getLanguage() + "&error=" + errorCode;
+    private String redirectToBadUser(String token, String errorCode, Locale locale) {
+        return "redirect:/api/bad-user?lang=" + locale.getLanguage() + "&token=" + token+ "&error=" + errorCode;
     }
 
     private String getErrorCode(String errorCode, Locale locale) {

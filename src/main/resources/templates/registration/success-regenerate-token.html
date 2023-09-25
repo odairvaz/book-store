@@ -1,0 +1,12 @@
+<head xmlns:th="http://www.thymeleaf.org">
+    <th:block th:insert="~{fragments/headerFragment.html}"/>
+</head>
+<body>
+<header th:insert="~{fragments/navbarFragment.html}"></header>
+<div class="container">
+    <div class="mt-5 alert alert-success">
+        <p>[[#{message.regenerate.token.success}]]</p>
+    </div>
+    <a th:href="@{/login}" th:text="#{label.form.loginLink}">login</a>
+</div>
+</body>

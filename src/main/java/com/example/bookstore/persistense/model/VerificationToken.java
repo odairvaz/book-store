@@ -58,6 +58,11 @@ public class VerificationToken {
         this.expiryDate = expiryDate;
     }
 
+    public void updateToken(final String token) {
+        this.token = token;
+        this.expiryDate = calculateExpiryDate();
+    }
+
     private Date calculateExpiryDate() {
         final Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(new Date().getTime());

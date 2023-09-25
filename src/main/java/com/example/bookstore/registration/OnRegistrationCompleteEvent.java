@@ -7,15 +7,17 @@ import java.util.Locale;
 
 public class OnRegistrationCompleteEvent extends ApplicationEvent {
 
-    private String appUrl;
-    private Locale locale;
-    private User user;
+    private final String appUrl;
+    private final Locale locale;
+    private final User user;
+    private final String existingToken;
 
-    public OnRegistrationCompleteEvent(User user, Locale locale, String appUrl) {
+    public OnRegistrationCompleteEvent(User user, Locale locale, String appUrl, String existingToken) {
         super(user);
         this.user = user;
         this.locale = locale;
         this.appUrl = appUrl;
+        this.existingToken = existingToken;
     }
 
     public String getAppUrl() {
@@ -28,5 +30,9 @@ public class OnRegistrationCompleteEvent extends ApplicationEvent {
 
     public User getUser() {
         return user;
+    }
+
+    public String getExistingToken() {
+        return existingToken;
     }
 }
