@@ -13,10 +13,14 @@ public interface IUserService {
 
     VerificationToken generateNewVerificationToken(String token);
 
+    void createPasswordResetTokenForUser(User user, String token);
+
     User getUser(String verificationToken);
 
     void saveRegisteredUser(User user);
 
     VerificationToken getVerificationToken(String verificationToken);
+
+    User findUserByEmail(String email);
 
 }

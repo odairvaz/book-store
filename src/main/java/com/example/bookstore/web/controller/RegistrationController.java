@@ -13,6 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
+import org.springframework.mail.MailAuthenticationException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/api")
@@ -33,11 +37,13 @@ public class RegistrationController {
     private final IUserService userService;
     private final ApplicationEventPublisher eventPublisher;
     private final MessageSource messages;
+    private final JavaMailSender mailSender;
 
-    public RegistrationController(IUserService userService, ApplicationEventPublisher eventPublisher, MessageSource messages) {
+    public RegistrationController(IUserService userService, ApplicationEventPublisher eventPublisher, MessageSource messages, JavaMailSender mailSender) {
         this.userService = userService;
         this.eventPublisher = eventPublisher;
         this.messages = messages;
+        this.mailSender = mailSender;
     }
 
     @GetMapping("/registration")
@@ -126,8 +132,37 @@ public class RegistrationController {
         return BAD_USER_PAGE;
     }
 
+    @GetMapping("/forget-password")
+    public String showForgetPasswordPage() {
+        return "password/forgot-password";
+    }
+
+    @PostMapping("/reset-password")
+    public String resetPassword(HttpServletRequest request, Model model, @RequestParam("email") String userEmail) {
+        final User user = userService.findUserByEmail(userEmail);
+        if (user == null) {
+            return "redirect:/password/forgot-password?lang=" + request.getLocale().getLanguage();
+        }
+
+        final String token = UUID.randomUUID().toString();
+        userService.createPasswordResetTokenForUser(user, token);
+        try {
+            String appUrl = request.getRequestURL().toString().replace(request.getRequestURI(), request.getContextPath());
+            final SimpleMailMessage email = constructResetTokenEmail(appUrl, request.getLocale(), token, user);
+            mailSender.send(email);
+        } catch (final MailAuthenticationException e) {
+            LOGGER.debug("MailAuthenticationException", e);
+            return "redirect:/emailError.html?lang=" + request.getLocale().getLanguage();
+        } catch (final Exception e) {
+            LOGGER.debug(e.getLocalizedMessage(), e);
+            model.addAttribute("message", e.getLocalizedMessage());
+            return "redirect:/login.html?lang=" + request.getLocale().getLanguage();
+        }
+        return "redirect:login?lang=" + request.getLocale().getLanguage();
+    }
+
     private String redirectToBadUser(String token, String errorCode, Locale locale) {
-        return "redirect:/api/bad-user?lang=" + locale.getLanguage() + "&token=" + token+ "&error=" + errorCode;
+        return "redirect:/api/bad-user?lang=" + locale.getLanguage() + "&token=" + token + "&error=" + errorCode;
     }
 
     private String getErrorCode(String errorCode, Locale locale) {
@@ -136,6 +171,17 @@ public class RegistrationController {
             case "invalid_token" -> messages.getMessage("auth.message.invalidToken", null, locale);
             default -> "An error occurred.";
         };
+    }
+
+    private SimpleMailMessage constructResetTokenEmail(final String contextPath, final Locale locale, final String token, final User user) {
+        final String url = contextPath + "/old/user/changePassword?id=" + user.getId() + "&token=" + token;
+        final String message = messages.getMessage("message.resetPassword", null, locale);
+        final SimpleMailMessage email = new SimpleMailMessage();
+        email.setTo(user.getEmail());
+        email.setSubject("Reset Password");
+        email.setText(message + " \r\n" + url);
+//        email.setFrom(env.getProperty("support.email"));
+        return email;
     }
 
 }

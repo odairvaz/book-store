@@ -1,9 +1,11 @@
 package com.example.bookstore.service.impl;
 
+import com.example.bookstore.persistense.model.PasswordResetToken;
 import com.example.bookstore.persistense.model.User;
 import com.example.bookstore.persistense.model.VerificationToken;
 import com.example.bookstore.persistense.repository.IRoleRepository;
 import com.example.bookstore.persistense.repository.IUserRepository;
+import com.example.bookstore.persistense.repository.PasswordResetTokenRepository;
 import com.example.bookstore.persistense.repository.VerificationTokenRepository;
 import com.example.bookstore.service.IUserService;
 import com.example.bookstore.web.dto.UserDto;
@@ -24,11 +26,15 @@ public class IUserServiceImpl implements IUserService {
     private final VerificationTokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public IUserServiceImpl(IUserRepository userRepository, IRoleRepository roleRepository, VerificationTokenRepository tokenRepository, PasswordEncoder passwordEncoder) {
+    private final PasswordResetTokenRepository passwordTokenRepository;
+
+
+    public IUserServiceImpl(IUserRepository userRepository, IRoleRepository roleRepository, VerificationTokenRepository tokenRepository, PasswordEncoder passwordEncoder, PasswordResetTokenRepository passwordTokenRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tokenRepository = tokenRepository;
         this.passwordEncoder = passwordEncoder;
+        this.passwordTokenRepository = passwordTokenRepository;
     }
 
     @Override
@@ -68,6 +74,12 @@ public class IUserServiceImpl implements IUserService {
     }
 
     @Override
+    public void createPasswordResetTokenForUser(User user, String token) {
+        final PasswordResetToken myToken = new PasswordResetToken(token, user);
+        passwordTokenRepository.save(myToken);
+    }
+
+    @Override
     public User getUser(String verificationToken) {
         return tokenRepository.findByToken(verificationToken).getUser();
     }
@@ -80,5 +92,10 @@ public class IUserServiceImpl implements IUserService {
     @Override
     public VerificationToken getVerificationToken(String verificationToken) {
         return tokenRepository.findByToken(verificationToken);
+    }
+
+    @Override
+    public User findUserByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 }
