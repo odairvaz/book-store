@@ -4,7 +4,8 @@ package com.example.bookstore.web.controller;
 import com.example.bookstore.persistense.model.User;
 import com.example.bookstore.persistense.model.VerificationToken;
 import com.example.bookstore.registration.OnRegistrationCompleteEvent;
-import com.example.bookstore.security.UserSecurityService;
+import com.example.bookstore.security.Token;
+import com.example.bookstore.security.TokenWrapper;
 import com.example.bookstore.service.IUserService;
 import com.example.bookstore.web.dto.UserDto;
 import com.example.bookstore.web.error.UserAlreadyExistException;
@@ -42,14 +43,12 @@ public class RegistrationController {
     private final ApplicationEventPublisher eventPublisher;
     private final MessageSource messages;
     private final JavaMailSender mailSender;
-    private final UserSecurityService userSecurityService;
 
-    public RegistrationController(IUserService userService, ApplicationEventPublisher eventPublisher, MessageSource messages, JavaMailSender mailSender, UserSecurityService userSecurityService) {
+    public RegistrationController(IUserService userService, ApplicationEventPublisher eventPublisher, MessageSource messages, JavaMailSender mailSender) {
         this.userService = userService;
         this.eventPublisher = eventPublisher;
         this.messages = messages;
         this.mailSender = mailSender;
-        this.userSecurityService = userSecurityService;
     }
 
     @GetMapping("/registration")
@@ -169,8 +168,8 @@ public class RegistrationController {
 
     @GetMapping("/update-password")
     public String showChangePassword(Locale locale, @RequestParam("token") String token, Model model) {
-        boolean passToken = userSecurityService.validatePasswordResetToken(token);
-        if (!passToken) {
+        Token tk = new TokenWrapper(userService.getPasswordResetToken(token));
+        if (tk.isTokenFound() && tk.isTokenExpired()) {
             return REDIRECT_LOGIN + locale.getLanguage();
         }
         model.addAttribute("token", token);
