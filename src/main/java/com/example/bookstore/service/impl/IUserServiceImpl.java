@@ -80,6 +80,17 @@ public class IUserServiceImpl implements IUserService {
     }
 
     @Override
+    public PasswordResetToken getPasswordResetToken(String token) {
+        return passwordTokenRepository.findByToken(token);
+    }
+
+    @Override
+    public void changeUserPassword(User user, String password) {
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
+    }
+
+    @Override
     public User getUser(String verificationToken) {
         return tokenRepository.findByToken(verificationToken).getUser();
     }

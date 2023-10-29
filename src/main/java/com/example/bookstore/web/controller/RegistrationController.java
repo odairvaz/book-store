@@ -4,6 +4,7 @@ package com.example.bookstore.web.controller;
 import com.example.bookstore.persistense.model.User;
 import com.example.bookstore.persistense.model.VerificationToken;
 import com.example.bookstore.registration.OnRegistrationCompleteEvent;
+import com.example.bookstore.security.UserSecurityService;
 import com.example.bookstore.service.IUserService;
 import com.example.bookstore.web.dto.UserDto;
 import com.example.bookstore.web.error.UserAlreadyExistException;
@@ -34,16 +35,21 @@ public class RegistrationController {
     private static final String SUCCESS_REGENERATE_TOKEN_PAGE = "registration/success-regenerate-token";
     private static final String BAD_USER_PAGE = "registration/bad-user";
     private static final String ERROR_REGISTRATION_PAGE = "registration/error-registration";
+    private static final String REDIRECT_LOGIN = "redirect:/login.html?lang=";
+    private static final String INVALID_TOKEN = "invalid_token";
+    private static final String EXPIRED_TOKEN = "expired_token";
     private final IUserService userService;
     private final ApplicationEventPublisher eventPublisher;
     private final MessageSource messages;
     private final JavaMailSender mailSender;
+    private final UserSecurityService userSecurityService;
 
-    public RegistrationController(IUserService userService, ApplicationEventPublisher eventPublisher, MessageSource messages, JavaMailSender mailSender) {
+    public RegistrationController(IUserService userService, ApplicationEventPublisher eventPublisher, MessageSource messages, JavaMailSender mailSender, UserSecurityService userSecurityService) {
         this.userService = userService;
         this.eventPublisher = eventPublisher;
         this.messages = messages;
         this.mailSender = mailSender;
+        this.userSecurityService = userSecurityService;
     }
 
     @GetMapping("/registration")
@@ -76,17 +82,17 @@ public class RegistrationController {
     }
 
     @GetMapping("/registration-confirm")
-    public String confirmRegistration(HttpServletRequest request, @RequestParam("token") String token, Model model) {
+    public String confirmRegistration(HttpServletRequest request, @RequestParam("token") String token) {
         Locale locale = request.getLocale();
         VerificationToken verificationToken = userService.getVerificationToken(token);
         if (verificationToken == null) {
-            return redirectToBadUser(token, "invalid_token", locale);
+            return redirectToBadUser(token, INVALID_TOKEN, locale);
         }
 
         User user = verificationToken.getUser();
         Calendar cal = Calendar.getInstance();
         if ((verificationToken.getExpiryDate().getTime() - cal.getTime().getTime()) <= 0) {
-            return redirectToBadUser(token, "expired_token", locale);
+            return redirectToBadUser(token, EXPIRED_TOKEN, locale);
         }
 
         user.setEnabled(true);
@@ -99,7 +105,7 @@ public class RegistrationController {
         Locale locale = request.getLocale();
         VerificationToken newToken = userService.generateNewVerificationToken(existingToken);
         if (newToken == null) {
-            return redirectToBadUser(existingToken, "invalid_token", locale);
+            return redirectToBadUser(existingToken, INVALID_TOKEN, locale);
         }
 
         User user = userService.getUser(newToken.getToken());
@@ -156,9 +162,26 @@ public class RegistrationController {
         } catch (final Exception e) {
             LOGGER.debug(e.getLocalizedMessage(), e);
             model.addAttribute("message", e.getLocalizedMessage());
-            return "redirect:/login.html?lang=" + request.getLocale().getLanguage();
+            return REDIRECT_LOGIN + request.getLocale().getLanguage();
         }
         return "redirect:login?lang=" + request.getLocale().getLanguage();
+    }
+
+    @GetMapping("/update-password")
+    public String showChangePassword(Locale locale, @RequestParam("token") String token, Model model) {
+        boolean passToken = userSecurityService.validatePasswordResetToken(token);
+        if (!passToken) {
+            return REDIRECT_LOGIN + locale.getLanguage();
+        }
+        model.addAttribute("token", token);
+        return "password/update-password";
+    }
+
+    @PostMapping("/save-password")
+    public String savePassword(@RequestParam("password") String password, @RequestParam("token") String token) {
+        User user = userService.getPasswordResetToken(token).getUser();
+        userService.changeUserPassword(user, password);
+        return "redirect:login?lang=" + Locale.getDefault().getLanguage();
     }
 
     private String redirectToBadUser(String token, String errorCode, Locale locale) {
@@ -167,20 +190,19 @@ public class RegistrationController {
 
     private String getErrorCode(String errorCode, Locale locale) {
         return switch (errorCode) {
-            case "expired_token" -> messages.getMessage("auth.message.expired", null, locale);
-            case "invalid_token" -> messages.getMessage("auth.message.invalidToken", null, locale);
+            case EXPIRED_TOKEN -> messages.getMessage("auth.message.expired", null, locale);
+            case INVALID_TOKEN -> messages.getMessage("auth.message.invalidToken", null, locale);
             default -> "An error occurred.";
         };
     }
 
     private SimpleMailMessage constructResetTokenEmail(final String contextPath, final Locale locale, final String token, final User user) {
-        final String url = contextPath + "/old/user/changePassword?id=" + user.getId() + "&token=" + token;
-        final String message = messages.getMessage("message.resetPassword", null, locale);
+        final String url = contextPath + "/api/update-password?token=" + token;
+        final String message = messages.getMessage("mail.reset.password", new Object[]{user.getFirstName(), url}, locale);
         final SimpleMailMessage email = new SimpleMailMessage();
         email.setTo(user.getEmail());
         email.setSubject("Reset Password");
-        email.setText(message + " \r\n" + url);
-//        email.setFrom(env.getProperty("support.email"));
+        email.setText(message);
         return email;
     }
 

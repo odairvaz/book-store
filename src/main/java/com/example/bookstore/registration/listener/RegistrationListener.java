@@ -6,6 +6,8 @@ import com.example.bookstore.service.IUserService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -17,6 +19,8 @@ import java.util.UUID;
 
 @Component
 public class RegistrationListener implements ApplicationListener<OnRegistrationCompleteEvent> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RegistrationListener.class);
 
     private final IUserService service;
     private final JavaMailSender mailSender;
@@ -66,7 +70,8 @@ public class RegistrationListener implements ApplicationListener<OnRegistrationC
             helper.setText(emailContent, true);
 
             mailSender.send(mimeMessage);
-        } catch (MessagingException e) {
+        } catch (MessagingException ex) {
+            LOGGER.error("Unable to send email: ", ex);
         }
     }
 
