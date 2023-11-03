@@ -39,6 +39,7 @@ public class RegistrationController {
     private static final String REDIRECT_LOGIN = "redirect:/login.html?lang=";
     private static final String INVALID_TOKEN = "invalid_token";
     private static final String EXPIRED_TOKEN = "expired_token";
+    private static final String INVALID_EMAIL = "invalid-email";
     private final IUserService userService;
     private final ApplicationEventPublisher eventPublisher;
     private final MessageSource messages;
@@ -138,7 +139,11 @@ public class RegistrationController {
     }
 
     @GetMapping("/forget-password")
-    public String showForgetPasswordPage() {
+    public String showForgetPasswordPage(@RequestParam(value = "error", required = false) String error, Model model) {
+        if (error != null) {
+            String errorMessage = getErrorCode(INVALID_EMAIL, Locale.getDefault());
+            model.addAttribute("error", errorMessage);
+        }
         return "password/forgot-password";
     }
 
@@ -146,7 +151,7 @@ public class RegistrationController {
     public String resetPassword(HttpServletRequest request, Model model, @RequestParam("email") String userEmail) {
         final User user = userService.findUserByEmail(userEmail);
         if (user == null) {
-            return "redirect:/password/forgot-password?lang=" + request.getLocale().getLanguage();
+            return "redirect:/api/forget-password?lang=" + request.getLocale().getLanguage() + "&error=" + INVALID_EMAIL;
         }
 
         final String token = UUID.randomUUID().toString();
@@ -191,6 +196,7 @@ public class RegistrationController {
         return switch (errorCode) {
             case EXPIRED_TOKEN -> messages.getMessage("auth.message.expired", null, locale);
             case INVALID_TOKEN -> messages.getMessage("auth.message.invalidToken", null, locale);
+            case INVALID_EMAIL -> messages.getMessage("message.invalid.user", null, locale);
             default -> "An error occurred.";
         };
     }
