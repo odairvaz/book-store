@@ -7,6 +7,7 @@ import com.example.bookstore.registration.OnRegistrationCompleteEvent;
 import com.example.bookstore.security.Token;
 import com.example.bookstore.security.TokenWrapper;
 import com.example.bookstore.service.IUserService;
+import com.example.bookstore.web.dto.PasswordDto;
 import com.example.bookstore.web.dto.UserDto;
 import com.example.bookstore.web.error.UserAlreadyExistException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -73,7 +74,7 @@ public class RegistrationController {
             bindingResult.rejectValue("email", "error.user", "There is already a user registered with the email provided.");
             return REGISTRATION_PAGE;
         } catch (RuntimeException ex) {
-            LOGGER.warn("Unable to register user", ex);
+            LOGGER.error("Unable to register user: ", ex);
             model.addAttribute("errorMessage", "An error occurred when sending the email!");
             return ERROR_REGISTRATION_PAGE;
         }
@@ -173,6 +174,8 @@ public class RegistrationController {
 
     @GetMapping("/update-password")
     public String showChangePassword(Locale locale, @RequestParam("token") String token, Model model) {
+        model.addAttribute("password", new PasswordDto());
+
         Token tk = new TokenWrapper(userService.getPasswordResetToken(token));
         if (tk.isTokenFound() && tk.isTokenExpired()) {
             return REDIRECT_LOGIN + locale.getLanguage();
@@ -182,9 +185,12 @@ public class RegistrationController {
     }
 
     @PostMapping("/save-password")
-    public String savePassword(@RequestParam("password") String password, @RequestParam("token") String token) {
+    public String savePassword(@RequestParam("token") String token, @ModelAttribute("password") @Valid PasswordDto passwordDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "password/update-password";
+        }
         User user = userService.getPasswordResetToken(token).getUser();
-        userService.changeUserPassword(user, password);
+        userService.changeUserPassword(user, passwordDto.getPassword());
         return "redirect:login?lang=" + Locale.getDefault().getLanguage();
     }
 

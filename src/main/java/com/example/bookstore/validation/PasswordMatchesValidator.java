@@ -1,5 +1,6 @@
 package com.example.bookstore.validation;
 
+import com.example.bookstore.web.dto.PasswordDto;
 import com.example.bookstore.web.dto.UserDto;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -15,15 +16,19 @@ public class PasswordMatchesValidator implements ConstraintValidator<PasswordMat
 
     @Override
     public boolean isValid(Object obj, ConstraintValidatorContext context) {
-        UserDto user = (UserDto) obj;
-        boolean passwordsMatch = user.getPassword().equals(user.getMatchingPassword());
+        boolean passwordsMatch = switch (obj) {
+            case UserDto userDto -> userDto.getPassword().equals(userDto.getMatchingPassword());
+            case PasswordDto passwordDto -> passwordDto.getPassword().equals(passwordDto.getMatchingPassword());
+            default -> false;
+        };
+
 
         if (!passwordsMatch) {
             context.buildConstraintViolationWithTemplate(message)
                     .addPropertyNode("password")
                     .addConstraintViolation();
-            return false;
         }
-        return true;
+        return passwordsMatch;
     }
+
 }
