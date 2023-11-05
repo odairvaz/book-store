@@ -6,8 +6,6 @@ import com.example.bookstore.registration.OnRegistrationCompleteEvent;
 import com.example.bookstore.service.IUserService;
 import com.example.bookstore.web.dto.UserDto;
 import com.example.bookstore.web.error.UserAlreadyExistException;
-import jakarta.servlet.http.HttpServletRequest;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -18,12 +16,9 @@ import org.springframework.context.MessageSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.test.web.servlet.result.ModelResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -32,7 +27,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 
 class RegistrationControllerTest {
@@ -174,13 +168,12 @@ class RegistrationControllerTest {
         user.setEnabled(false);
         verificationToken.setUser(user);
         verificationToken.setExpiryDate(new Date(System.currentTimeMillis() + 86400_000));
-        Model model = mock(Model.class);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setLocalName(Locale.ENGLISH.getLanguage());
 
         when(userService.getVerificationToken(token)).thenReturn(verificationToken);
-        String result = registrationController.confirmRegistration(request, token, model);
+        String result = registrationController.confirmRegistration(request, token);
 
         verify(userService).getVerificationToken(token);
         verify(userService).saveRegisteredUser(user);
@@ -192,12 +185,11 @@ class RegistrationControllerTest {
     @Test
     void givenInvalidToken_whenConfirmRegistration_thenRedirectToBadUserPage() {
         String token = "invalid-token";
-        Model model = mock(Model.class);
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setLocalName(Locale.ENGLISH.getLanguage());
 
         when(userService.getVerificationToken(token)).thenReturn(null);
-        String result = registrationController.confirmRegistration(request, token, model);
+        String result = registrationController.confirmRegistration(request, token);
 
         assertEquals("redirect:/api/bad-user?lang=en&token=invalid-token&error=invalid_token", result);
     }
@@ -211,12 +203,11 @@ class RegistrationControllerTest {
         verificationToken.setUser(user);
         verificationToken.setExpiryDate(new Date(System.currentTimeMillis() - 86400_000));
 
-        Model model = mock(Model.class);
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setLocalName(Locale.ENGLISH.getLanguage());
 
         when(userService.getVerificationToken(token)).thenReturn(verificationToken);
-        String result = registrationController.confirmRegistration(request, token, model);
+        String result = registrationController.confirmRegistration(request, token);
 
         verify(userService).getVerificationToken(token);
         assertFalse(user.isEnabled());
