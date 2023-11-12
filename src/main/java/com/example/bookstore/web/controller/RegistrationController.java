@@ -177,7 +177,7 @@ public class RegistrationController {
         model.addAttribute("password", new PasswordDto());
 
         Token tk = new TokenWrapper(userService.getPasswordResetToken(token));
-        if (tk.isTokenFound() && tk.isTokenExpired()) {
+        if (!tk.isTokenFound() || tk.isTokenExpired()) {
             return REDIRECT_LOGIN + locale.getLanguage();
         }
         model.addAttribute("token", token);
