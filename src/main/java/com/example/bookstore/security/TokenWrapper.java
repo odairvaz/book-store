@@ -32,6 +32,6 @@ public class TokenWrapper implements Token {
         } else if (verificationToken != null) {
             return verificationToken.getExpiryDate().before(cal.getTime());
         }
-        return false;
+        return true;
     }
 }

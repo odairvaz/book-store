@@ -1,9 +1,13 @@
 package com.example.bookstore.web.controller;
 
+import com.example.bookstore.persistense.model.PasswordResetToken;
 import com.example.bookstore.persistense.model.User;
 import com.example.bookstore.persistense.model.VerificationToken;
 import com.example.bookstore.registration.OnRegistrationCompleteEvent;
+import com.example.bookstore.security.Token;
+import com.example.bookstore.security.TokenWrapper;
 import com.example.bookstore.service.IUserService;
+import com.example.bookstore.web.dto.PasswordDto;
 import com.example.bookstore.web.dto.UserDto;
 import com.example.bookstore.web.error.UserAlreadyExistException;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,12 +17,17 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
+import org.springframework.mail.MailAuthenticationException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.BindingResult;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.Locale;
 
@@ -39,6 +48,12 @@ class RegistrationControllerTest {
 
     @Mock
     private MessageSource messageSource;
+
+    @Mock
+    private JavaMailSender mailSender;
+
+    @Mock
+    private TokenWrapper tokenWrapper;
 
     @InjectMocks
     private RegistrationController registrationController;
@@ -297,6 +312,151 @@ class RegistrationControllerTest {
         String result = registrationController.resendRegistrationToken(invalidToken, request);
 
         assertEquals("redirect:/api/bad-user?lang=en&token=invalid-token&error=invalid_token", result);
+    }
+
+    @Test
+    void givenErrorParameter_whenShowForgetPasswordPage_thenErrorMessageAddedToModel() throws Exception {
+        String errorParam = "invalid-email";
+
+        mockMvc.perform(get("/api/forget-password").param("error", errorParam))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void givenNoErrorParameter_whenShowForgetPasswordPage_thenNoErrorMessageAddedToModel() throws Exception {
+        mockMvc.perform(get("/api/forget-password"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeDoesNotExist("error"));
+    }
+
+    @Test
+    void givenValidUserEmail_whenResetPassword_thenRedirectToLogin() throws Exception {
+        String validEmail = "valid.user@bookstore.com";
+        User mockUser = new User();
+
+        when(userService.findUserByEmail(validEmail)).thenReturn(mockUser);
+
+        mockMvc.perform(post("/api/reset-password")
+                        .param("email", validEmail))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("login?lang=" + Locale.getDefault().getLanguage()));
+    }
+
+    @Test
+    void givenInvalidUserEmail_whenResetPassword_thenRedirectToForgetPasswordWithError() throws Exception {
+        String invalidEmail = "invalid.user@bookstore.com";
+
+        when(userService.findUserByEmail(invalidEmail)).thenReturn(null);
+
+        mockMvc.perform(post("/api/reset-password")
+                        .param("email", invalidEmail))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/api/forget-password?lang=" + Locale.getDefault().getLanguage() + "&error=" + "invalid-email"));
+    }
+
+    @Test
+    void givenMailAuthenticationException_whenResetPassword_thenRedirectToEmailError() throws Exception {
+        String validEmail = "valid.user@bookstore.com";
+
+        when(userService.findUserByEmail(validEmail)).thenReturn(new User());
+        doThrow(new MailAuthenticationException("Mail Authentication Exception"))
+                .when(mailSender).send(any(SimpleMailMessage.class));
+
+        mockMvc.perform(post("/api/reset-password")
+                        .param("email", validEmail))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/emailError.html?lang=" + Locale.getDefault().getLanguage()));
+    }
+
+    @Test
+    void givenValidTokenAndNonExpiredToken_whenShowChangePassword_thenRedirectToLogin() throws Exception {
+        String validToken = "valid-token";
+        when(tokenWrapper.isTokenFound()).thenReturn(true);
+        when(tokenWrapper.isTokenExpired()).thenReturn(false);
+
+        mockMvc.perform(get("/api/update-password").param("token", validToken))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/login.html?lang=" + Locale.getDefault().getLanguage()));
+    }
+
+    @Test
+    void givenValidTokenAndValidPasswordDto_whenSavePassword_thenSuccessfully() throws Exception {
+        BindingResult bindingResult = mock(BindingResult.class);
+        PasswordResetToken validPasswordResetToken = new PasswordResetToken();
+        LocalDate nonExpiredDate = LocalDate.now().plusDays(7);
+        validPasswordResetToken.setExpiryDate(Date.from(nonExpiredDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+
+        String validToken = "valid-token";
+        PasswordDto validPasswordDto = new PasswordDto();
+        validPasswordDto.setPassword("validPassword");
+        validPasswordDto.setMatchingPassword("validPassword");
+        when(bindingResult.hasErrors()).thenReturn(false);
+        when(userService.getPasswordResetToken(validToken)).thenReturn(validPasswordResetToken);
+
+        mockMvc.perform(post("/api/save-password")
+                        .param("token", validToken)
+                        .flashAttr("password", validPasswordDto))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("login?lang=" + Locale.getDefault().getLanguage()));
+    }
+
+    @Test
+    void givenValidTokenAndInvalidPasswordDto_whenSavePassword_thenViewWithErrors() throws Exception {
+        BindingResult bindingResult = mock(BindingResult.class);
+
+        String validToken = "valid-token";
+        PasswordDto invalidPasswordDto = new PasswordDto();
+        invalidPasswordDto.setPassword("password1");
+        invalidPasswordDto.setMatchingPassword("password2");
+
+        when(bindingResult.hasErrors()).thenReturn(true);
+
+        mockMvc.perform(post("/api/save-password")
+                        .param("token", validToken)
+                        .flashAttr("password", invalidPasswordDto))
+                .andExpect(status().isOk())
+                .andExpect(view().name("password/update-password"))
+                .andExpect(model().attributeHasFieldErrors("password", "password"));
+    }
+
+    @Test
+    void givenInvalidToken_whenShowChangePassword_thenRedirectToLogin() throws Exception {
+        String invalidToken = "invalid-token";
+        when(tokenWrapper.isTokenFound()).thenReturn(false);
+
+        mockMvc.perform(get("/api/update-password").param("token", invalidToken))
+                .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    void givenExpiredToken_whenShowChangePassword_thenRedirectToLogin() throws Exception {
+        String expiredToken = "expired-token";
+        when(tokenWrapper.isTokenFound()).thenReturn(true);
+        when(tokenWrapper.isTokenExpired()).thenReturn(true);
+
+        mockMvc.perform(get("/api/update-password").param("token", expiredToken))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login.html?lang=" + Locale.getDefault().getLanguage()));
+
+    }
+
+    @Test
+    void givenValidTokenAndNonExpiredToken_whenShowChangePassword_thenCorrectView() throws Exception {
+        String validToken = "valid-token";
+
+        PasswordResetToken validPasswordResetToken = new PasswordResetToken();
+        LocalDate nonExpiredDate = LocalDate.now().plusDays(7);
+        validPasswordResetToken.setExpiryDate(Date.from(nonExpiredDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+
+
+        when(userService.getPasswordResetToken(validToken)).thenReturn(validPasswordResetToken);
+        when(tokenWrapper.isTokenFound()).thenReturn(true);
+        when(tokenWrapper.isTokenExpired()).thenReturn(false);
+
+        mockMvc.perform(get("/api/update-password").param("token", validToken))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("password", "token"))
+                .andExpect(view().name("password/update-password"));
     }
 
 }
