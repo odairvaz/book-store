@@ -2,6 +2,7 @@ package com.example.bookstore.web.dto;
 
 import com.example.bookstore.validation.PasswordMatches;
 import com.example.bookstore.validation.ValidEmail;
+import com.example.bookstore.validation.ValidPassword;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
@@ -15,8 +16,7 @@ public class UserDto {
     @NotEmpty
     private String lastName;
 
-    @NotNull
-    @NotEmpty
+    @ValidPassword
     private String password;
     private String matchingPassword;
 

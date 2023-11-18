@@ -4,7 +4,6 @@ import com.example.bookstore.persistense.model.PasswordResetToken;
 import com.example.bookstore.persistense.model.User;
 import com.example.bookstore.persistense.model.VerificationToken;
 import com.example.bookstore.registration.OnRegistrationCompleteEvent;
-import com.example.bookstore.security.Token;
 import com.example.bookstore.security.TokenWrapper;
 import com.example.bookstore.service.IUserService;
 import com.example.bookstore.web.dto.PasswordDto;
@@ -12,6 +11,8 @@ import com.example.bookstore.web.dto.UserDto;
 import com.example.bookstore.web.error.UserAlreadyExistException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -64,6 +65,8 @@ class RegistrationControllerTest {
     void setup() {
         MockitoAnnotations.openMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(registrationController).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(registrationController).build();
+
     }
 
     @Test
@@ -85,8 +88,8 @@ class RegistrationControllerTest {
         mockMvc.perform(post("/api/registration")
                         .param("firstName", "User")
                         .param("lastName", "User")
-                        .param("password", "123")
-                        .param("matchingPassword", "123")
+                        .param("password", "Aczd139!")
+                        .param("matchingPassword", "Aczd139!")
                         .param("email", "user@company.com"))
                 .andExpect(status().isOk())
                 .andExpect(model().attributeExists("successMessage"))
@@ -123,8 +126,8 @@ class RegistrationControllerTest {
         mockMvc.perform(post("/api/registration")
                         .param("firstName", "John")
                         .param("lastName", "Doe")
-                        .param("password", "password123")
-                        .param("matchingPassword", "password123")
+                        .param("password", "Aczd139!")
+                        .param("matchingPassword", "Aczd139!")
                         .param("email", "invalid_mail"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.model().attributeHasFieldErrors("user", "email"))
@@ -144,8 +147,8 @@ class RegistrationControllerTest {
         mockMvc.perform(post("/api/registration")
                         .param("firstName", "User")
                         .param("lastName", "User")
-                        .param("password", "123")
-                        .param("matchingPassword", "123")
+                        .param("password", "Aczd139!")
+                        .param("matchingPassword", "Aczd139!")
                         .param("email", "user@company.com"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("registration/registration"))
@@ -165,8 +168,8 @@ class RegistrationControllerTest {
         mockMvc.perform(post("/api/registration")
                         .param("firstName", "User")
                         .param("lastName", "User")
-                        .param("password", "123")
-                        .param("matchingPassword", "123")
+                        .param("password", "Aczd139!")
+                        .param("matchingPassword", "Aczd139!")
                         .param("email", "user@company.com"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("registration/error-registration"))
@@ -239,34 +242,12 @@ class RegistrationControllerTest {
                 .andExpect(model().attributeExists("successMessage"));
     }
 
-    @Test
-    void givenBadUserPageRequest_whenErrorExpiredToken_thenReturnBadUserView() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"expired_token", "invalid_token", "default"})
+    void givenBadUserPageRequest_whenErrorParam_thenReturnBadUserView(String error) throws Exception {
         when(messageSource.getMessage(anyString(), any(), any(Locale.class))).thenReturn("Error Message");
 
-        mockMvc.perform(get("/api/bad-user")
-                        .param("error", "expired_token"))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(view().name("registration/bad-user"))
-                .andExpect(model().attributeExists("errorMessage"));
-    }
-
-    @Test
-    void givenBadUserPageRequest_whenErrorInvalidToken_thenReturnBadUserView() throws Exception {
-        when(messageSource.getMessage(anyString(), any(), any(Locale.class))).thenReturn("Error Message");
-
-        mockMvc.perform(get("/api/bad-user")
-                        .param("error", "invalid_token"))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(view().name("registration/bad-user"))
-                .andExpect(model().attributeExists("errorMessage"));
-    }
-
-    @Test
-    void givenBadUserPageRequest_whenErrorDefault_thenReturnBadUserView() throws Exception {
-        when(messageSource.getMessage(anyString(), any(), any(Locale.class))).thenReturn("Error Message");
-
-        mockMvc.perform(get("/api/bad-user")
-                        .param("error", "default"))
+        mockMvc.perform(get("/api/bad-user").param("error", error))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(view().name("registration/bad-user"))
                 .andExpect(model().attributeExists("errorMessage"));
