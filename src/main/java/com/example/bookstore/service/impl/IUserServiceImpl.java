@@ -91,6 +91,11 @@ public class IUserServiceImpl implements IUserService {
     }
 
     @Override
+    public boolean checkIfValidOldPassword(User user, String oldPassword) {
+        return passwordEncoder.matches(oldPassword, user.getPassword());
+    }
+
+    @Override
     public User getUser(String verificationToken) {
         return tokenRepository.findByToken(verificationToken).getUser();
     }
