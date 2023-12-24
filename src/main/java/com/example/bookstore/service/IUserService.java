@@ -20,6 +20,8 @@ public interface IUserService {
 
     void changeUserPassword(User user, String password);
 
+    boolean checkIfValidOldPassword(User user, String oldPassword);
+
     User getUser(String verificationToken);
 
     void saveRegisteredUser(User user);
