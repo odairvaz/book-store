@@ -1,14 +1,14 @@
 package com.example.bookstore.config;
 
+import com.example.bookstore.service.impl.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -17,36 +17,42 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration
 public class SecurityConfig {
 
-    @Bean
-    public PasswordEncoder encoder() {
-        return new BCryptPasswordEncoder(11);
+    private final UserDetailsServiceImpl userDetailsService;
+
+    public SecurityConfig(UserDetailsServiceImpl userDetailsService) {
+        this.userDetailsService = userDetailsService;
     }
 
     @Bean
-    public InMemoryUserDetailsManager userDetailsService() {
-        UserDetails user = User.withUsername("user")
-                .password(encoder().encode("user"))
-                .roles("USER")
-                .build();
-        UserDetails admin = User.withUsername("admin")
-                .password(encoder().encode("admin"))
-                .roles("ADMIN")
-                .build();
-        return new InMemoryUserDetailsManager(user, admin);
+    public PasswordEncoder encoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http.authorizeHttpRequests(
-                authorize -> {
-                    authorize.requestMatchers("/login").permitAll();
-                    authorize.requestMatchers("/api/{version}/books").permitAll();
-                    authorize.requestMatchers("/api/{version}/books/delete/**").hasRole("ADMIN");
-                    authorize.anyRequest().authenticated();
-                }
-              )
+        http.authorizeHttpRequests(
+                        authorize -> {
+                            authorize.requestMatchers("/login").permitAll();
+                            authorize.requestMatchers("/api/{version}/books").permitAll();
+                            authorize.requestMatchers("/api/registration").permitAll();
+                            authorize.requestMatchers("/api/forget-password").permitAll();
+                            authorize.requestMatchers("/api/{version}/books/delete/**").hasRole("ADMIN");
+                            authorize.requestMatchers("/api/{version}/books/new").hasRole("ADMIN");
+                            authorize.anyRequest().authenticated();
+                        }
+                )
                 .formLogin(withDefaults())
-                .build();
+                .logout(LogoutConfigurer::permitAll);
+        http.authenticationProvider(authenticationProvider());
+        return http.build();
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(encoder());
+        return provider;
     }
 
 }
