@@ -1,6 +1,7 @@
 package com.example.bookstore.service.impl;
 
 import com.example.bookstore.persistense.model.PasswordResetToken;
+import com.example.bookstore.persistense.model.Role;
 import com.example.bookstore.persistense.model.User;
 import com.example.bookstore.persistense.model.VerificationToken;
 import com.example.bookstore.persistense.repository.IRoleRepository;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -25,7 +27,6 @@ public class IUserServiceImpl implements IUserService {
     private final IRoleRepository roleRepository;
     private final VerificationTokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
-
     private final PasswordResetTokenRepository passwordTokenRepository;
 
 
@@ -52,8 +53,16 @@ public class IUserServiceImpl implements IUserService {
         return userRepository.save(user);
     }
 
-    private boolean emailExists(final String email) {
-        return userRepository.findByEmail(email) != null;
+    @Override
+    public void createUser(String firstName, String lastName, String email, String password, List<Role> roles) {
+        User user = new User();
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setEmail(email);
+        user.setRoles(roles);
+        user.setEnabled(true);
+        userRepository.save(user);
     }
 
     @Override
@@ -114,4 +123,9 @@ public class IUserServiceImpl implements IUserService {
     public User findUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
+
+    private boolean emailExists(final String email) {
+        return userRepository.findByEmail(email) != null;
+    }
+
 }
