@@ -1,12 +1,17 @@
 package com.example.bookstore.config;
 
+import com.example.bookstore.authentication.AdminAuthenticationProvider;
 import com.example.bookstore.service.impl.UserDetailsServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
@@ -22,6 +27,8 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration
 public class SecurityConfig {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfig.class);
+
     private final UserDetailsServiceImpl userDetailsService;
 
     public SecurityConfig(UserDetailsServiceImpl userDetailsService) {
@@ -35,21 +42,15 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(
-                        authorize -> {
-                            authorize.requestMatchers("/login").permitAll();
-                            authorize.requestMatchers("/api/{version}/books").permitAll();
-                            authorize.requestMatchers("/api/registration").permitAll();
-                            authorize.requestMatchers("/api/forget-password").permitAll();
-                            authorize.requestMatchers("/api/{version}/books/delete/**").hasRole("ADMIN");
-                            authorize.requestMatchers("/api/{version}/books/new").hasRole("STAFF");
-                            authorize.anyRequest().authenticated();
-                        }
-                )
-                .formLogin(withDefaults())
-                .logout(LogoutConfigurer::permitAll);
-        http.authenticationProvider(authenticationProvider());
-        return http.build();
+        return http.authorizeHttpRequests(authorize -> {
+            authorize.requestMatchers("/login").permitAll();
+            authorize.requestMatchers("/api/{version}/books").permitAll();
+            authorize.requestMatchers("/api/registration").permitAll();
+            authorize.requestMatchers("/api/forget-password").permitAll();
+            authorize.requestMatchers("/api/{version}/books/delete/**").hasRole("ADMIN");
+            authorize.requestMatchers("/api/{version}/books/new").hasRole("STAFF");
+            authorize.anyRequest().authenticated();
+        }).formLogin(withDefaults()).logout(LogoutConfigurer::permitAll).authenticationProvider(new AdminAuthenticationProvider()).build();
     }
 
     @Bean
@@ -73,6 +74,14 @@ public class SecurityConfig {
         DefaultWebSecurityExpressionHandler expressionHandler = new DefaultWebSecurityExpressionHandler();
         expressionHandler.setRoleHierarchy(roleHierarchy());
         return expressionHandler;
+    }
+
+    @Bean
+    public ApplicationListener<AuthenticationSuccessEvent> successListener() {
+        return event -> {
+            var auth = event.getAuthentication();
+            LOGGER.info("LOGIN SUCCESSFUL [{}] - {} ", auth.getClass().getSimpleName(), auth.getName());
+        };
     }
 
 }
