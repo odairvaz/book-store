@@ -19,6 +19,8 @@ import org.springframework.context.MessageSource;
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -41,6 +43,9 @@ public class RegistrationController {
     private static final String INVALID_TOKEN = "invalid_token";
     private static final String EXPIRED_TOKEN = "expired_token";
     private static final String INVALID_EMAIL = "invalid-email";
+    private static final String INVALID_OLD_PASSWORD = "invalid_old_password";
+    private static final String CHANGE_PASSWORD_SUCCESS = "change_password_success";
+    public static final String CHANGE_PASSWORD = "password/change-password";
     private final IUserService userService;
     private final ApplicationEventPublisher eventPublisher;
     private final MessageSource messages;
@@ -129,7 +134,7 @@ public class RegistrationController {
     @GetMapping("/bad-user")
     public String badUser(@RequestParam("error") String errorCode, Model model, HttpServletRequest request) {
         VerificationToken verificationToken = userService.getVerificationToken(request.getParameter("token"));
-        String errorMessage = getErrorCode(errorCode, request.getLocale());
+        String errorMessage = getMessages(errorCode, request.getLocale());
         model.addAttribute("isTokenValid", true);
         if (verificationToken == null) {
             model.addAttribute("isTokenValid", false);
@@ -142,7 +147,7 @@ public class RegistrationController {
     @GetMapping("/forget-password")
     public String showForgetPasswordPage(@RequestParam(value = "error", required = false) String error, Model model) {
         if (error != null) {
-            String errorMessage = getErrorCode(INVALID_EMAIL, Locale.getDefault());
+            String errorMessage = getMessages(INVALID_EMAIL, Locale.getDefault());
             model.addAttribute("error", errorMessage);
         }
         return "password/forgot-password";
@@ -173,7 +178,7 @@ public class RegistrationController {
     }
 
     @GetMapping("/update-password")
-    public String showChangePassword(Locale locale, @RequestParam("token") String token, Model model) {
+    public String showUpdatePassword(Locale locale, @RequestParam("token") String token, Model model) {
         model.addAttribute("password", new PasswordDto());
 
         Token tk = new TokenWrapper(userService.getPasswordResetToken(token));
@@ -194,15 +199,43 @@ public class RegistrationController {
         return "redirect:login?lang=" + Locale.getDefault().getLanguage();
     }
 
+    @GetMapping("/change-password")
+    public String showChangePasswordPage(Model model) {
+        model.addAttribute("password", new PasswordDto());
+        return CHANGE_PASSWORD;
+    }
+
+    @PostMapping("/change-password")
+    @PreAuthorize("hasRole('READ_PRIVILEGE')")
+    public String changeUserPassword(@RequestParam("oldPassword") String oldPassword, Model model, @ModelAttribute("password") @Valid PasswordDto passwordDto, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return CHANGE_PASSWORD;
+        }
+
+        User user = userService.findUserByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
+        if (!userService.checkIfValidOldPassword(user, oldPassword)) {
+            String errorMessage = getMessages(INVALID_OLD_PASSWORD, Locale.getDefault());
+            model.addAttribute("error", errorMessage);
+            return CHANGE_PASSWORD;
+        }
+
+        userService.changeUserPassword(user, passwordDto.getPassword());
+        String successMessage = getMessages(CHANGE_PASSWORD_SUCCESS, Locale.getDefault());
+        model.addAttribute("success", successMessage);
+        return CHANGE_PASSWORD;
+    }
+
     private String redirectToBadUser(String token, String errorCode, Locale locale) {
         return "redirect:/api/bad-user?lang=" + locale.getLanguage() + "&token=" + token + "&error=" + errorCode;
     }
 
-    private String getErrorCode(String errorCode, Locale locale) {
-        return switch (errorCode) {
+    private String getMessages(String code, Locale locale) {
+        return switch (code) {
             case EXPIRED_TOKEN -> messages.getMessage("auth.message.expired", null, locale);
             case INVALID_TOKEN -> messages.getMessage("auth.message.invalidToken", null, locale);
             case INVALID_EMAIL -> messages.getMessage("message.invalid.user", null, locale);
+            case INVALID_OLD_PASSWORD -> messages.getMessage("message.invalid.old.password", null, locale);
+            case CHANGE_PASSWORD_SUCCESS -> messages.getMessage("message.password.change.success", null, locale);
             default -> "An error occurred.";
         };
     }

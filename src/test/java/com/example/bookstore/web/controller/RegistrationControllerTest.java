@@ -369,8 +369,8 @@ class RegistrationControllerTest {
 
         String validToken = "valid-token";
         PasswordDto validPasswordDto = new PasswordDto();
-        validPasswordDto.setPassword("validPassword");
-        validPasswordDto.setMatchingPassword("validPassword");
+        validPasswordDto.setPassword("P@ssword169");
+        validPasswordDto.setMatchingPassword("P@ssword169");
         when(bindingResult.hasErrors()).thenReturn(false);
         when(userService.getPasswordResetToken(validToken)).thenReturn(validPasswordResetToken);
 
