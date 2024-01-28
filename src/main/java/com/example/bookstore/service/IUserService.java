@@ -1,13 +1,11 @@
 package com.example.bookstore.service;
 
-import com.example.bookstore.persistense.model.PasswordResetToken;
-import com.example.bookstore.persistense.model.Role;
-import com.example.bookstore.persistense.model.User;
-import com.example.bookstore.persistense.model.VerificationToken;
+import com.example.bookstore.persistense.model.*;
 import com.example.bookstore.web.dto.UserDto;
 import com.example.bookstore.web.error.UserAlreadyExistException;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IUserService {
 
@@ -34,5 +32,7 @@ public interface IUserService {
     VerificationToken getVerificationToken(String verificationToken);
 
     User findUserByEmail(String email);
+
+    Optional<User> findUserById(Long id);
 
 }
