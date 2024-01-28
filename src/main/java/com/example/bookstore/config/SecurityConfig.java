@@ -21,8 +21,6 @@ import org.springframework.security.web.FilterInvocation;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 @EnableWebSecurity
 @Configuration
 public class SecurityConfig {
@@ -50,7 +48,10 @@ public class SecurityConfig {
             authorize.requestMatchers("/api/{version}/books/delete/**").hasRole("ADMIN");
             authorize.requestMatchers("/api/{version}/books/new").hasRole("STAFF");
             authorize.anyRequest().authenticated();
-        }).formLogin(withDefaults()).logout(LogoutConfigurer::permitAll).authenticationProvider(new AdminAuthenticationProvider()).build();
+        }).formLogin(formLogin -> {
+            formLogin.defaultSuccessUrl("/api/v1/books", true);
+            formLogin.permitAll();
+        }).logout(LogoutConfigurer::permitAll).authenticationProvider(new AdminAuthenticationProvider()).build();
     }
 
     @Bean

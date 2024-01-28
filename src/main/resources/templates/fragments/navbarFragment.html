@@ -34,6 +34,17 @@
                 </div>
             </div>
         </form>
+
+        <li class="nav-item dropdown" th:if="${#authorization.expression('isAuthenticated()')}">
+            <a class="nav-link dropdown-toggle text-white align-middle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-user fa-lg text-white"></i>
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item" href="/api/my-account">My account</a>
+                <a class="dropdown-item" href="/logout">Log out</a>
+            </div>
+        </li>
+
     </div>
 </nav>
 
