@@ -1,0 +1,16 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/headerFragment.html}"/>
+</head>
+<body>
+<header th:insert="~{fragments/navbarFragment.html}"></header>
+<div class="container d-flex justify-content-center" style="min-height: 100vh;">
+    <div>
+        <h1>Access Denied</h1>
+        <p th:text="${message}"></p>
+    </div>
+</div>
+</body>
+</html>

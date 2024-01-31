@@ -2,11 +2,15 @@ package com.example.bookstore.config;
 
 import com.example.bookstore.authentication.AdminAuthenticationProvider;
 import com.example.bookstore.service.impl.UserDetailsServiceImpl;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
@@ -19,7 +23,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.FilterInvocation;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
+
+import java.io.IOException;
 
 @EnableWebSecurity
 @Configuration
@@ -48,7 +55,9 @@ public class SecurityConfig {
             authorize.requestMatchers("/api/{version}/books/delete/**").hasRole("ADMIN");
             authorize.requestMatchers("/api/{version}/books/new").hasRole("STAFF");
             authorize.anyRequest().authenticated();
-        }).formLogin(formLogin -> {
+        })
+                .exceptionHandling(exception -> exception.accessDeniedHandler(accessDeniedHandler()))
+                .formLogin(formLogin -> {
             formLogin.defaultSuccessUrl("/api/v1/books", true);
             formLogin.permitAll();
         }).logout(LogoutConfigurer::permitAll).authenticationProvider(new AdminAuthenticationProvider()).build();
@@ -82,6 +91,18 @@ public class SecurityConfig {
         return event -> {
             var auth = event.getAuthentication();
             LOGGER.info("LOGIN SUCCESSFUL [{}] - {} ", auth.getClass().getSimpleName(), auth.getName());
+        };
+    }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        return new AccessDeniedHandler() {
+
+            @Override
+            public void handle(HttpServletRequest request, HttpServletResponse response,
+                               AccessDeniedException accessDeniedException) throws IOException, ServletException {
+                response.sendRedirect("/access-denied");
+            }
         };
     }
 
