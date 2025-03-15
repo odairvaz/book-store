@@ -2,6 +2,7 @@ package com.example.bookstore.web.controller;
 
 import com.example.bookstore.persistense.model.Book;
 import com.example.bookstore.service.IBookService;
+import com.example.bookstore.web.dto.BookDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -145,7 +146,7 @@ class BookControllerTest {
         String viewName = bookController.addNewBook(model);
 
         verify(model).addAttribute(eq("currentYear"), anyInt());
-        verify(model).addAttribute(eq("book"), any(Book.class));
+        verify(model).addAttribute(eq("book"), any(BookDto.class));
         verify(model).addAttribute((BookController.PAGE_TITLE_ATTRIBUTE), ("Add New Book"));
 
         assertEquals("add", viewName);
@@ -189,7 +190,7 @@ class BookControllerTest {
         when(bookService.findById(anyLong())).thenReturn(Optional.empty());
         BookController bookController = new BookController(bookService);
 
-        assertThrows(ResponseStatusException.class, () -> bookController.updateBook(id, new Book(), null));
+        assertThrows(ResponseStatusException.class, () -> bookController.updateBook(id, BookDto.empty(), null));
         verify(bookService).findById(id);
     }
 

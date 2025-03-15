@@ -1,8 +1,6 @@
 package com.example.bookstore.persistense.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
@@ -29,6 +27,14 @@ public class Book {
     private byte[] bookCover;
 
     public Book() {}
+
+    public Book(String title, String author, String publisher, int year, double price) {
+        this.title = title;
+        this.author = author;
+        this.publisher = publisher;
+        this.year = year;
+        this.price = price;
+    }
 
     public Long getId() {
         return id;
