@@ -94,16 +94,6 @@ public class Book {
         this.bookCover = imageData;
     }
 
-    public void addReview(Review review) {
-        reviews.add(review);
-        review.setBook(this);
-    }
-
-    public void removeReview(Review review) {
-        reviews.remove(review);
-        review.setBook(null);
-    }
-
     @Override
     public String toString() {
         return "Book{" +
