@@ -25,6 +25,48 @@
                 </div>
             </div>
         </div>
+        <div class="container mt-4">
+            <h3>Reviews</h3>
+            <div th:if="${reviews.isEmpty()}">
+                <p>No reviews available for this book.</p>
+            </div>
+            <div th:each="review : ${reviews}" class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${review.reviewerName}"></h5>
+                    <p class="card-text">
+                        Rating: <span th:text="${review.rating}"></span>/5
+                    </p>
+                    <p class="card-text" th:text="${review.comment}"></p>
+                    <p class="text-muted">Reviewed on <span th:text="${#temporals.format(review.createdAt, 'dd MMM yyyy')}"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mt-4">
+            <h3>Add a Review</h3>
+            <form th:action="@{/api/v1/books/{bookId}/reviews(bookId=${book.id})}" th:object="${review}" method="post">
+                <div class="mb-3">
+                    <label for="reviewerName" class="form-label">Your Name</label>
+                    <input type="text" id="reviewerName" class="form-control" th:field="*{reviewerName}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="rating" class="form-label">Rating</label>
+                    <select id="rating" class="form-select" th:field="*{rating}">
+                        <option th:value="1">1</option>
+                        <option th:value="2">2</option>
+                        <option th:value="3">3</option>
+                        <option th:value="4">4</option>
+                        <option th:value="5">5</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="comment" class="form-label">Comment</label>
+                    <textarea id="comment" class="form-control" th:field="*{comment}" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit Review</button>
+            </form>
+        </div>
+
     </div>
 </div>
 </body>

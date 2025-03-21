@@ -2,6 +2,7 @@ package com.example.bookstore.web.controller;
 
 import com.example.bookstore.persistense.model.Book;
 import com.example.bookstore.service.IBookService;
+import com.example.bookstore.service.IReviewService;
 import com.example.bookstore.web.dto.BookDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,9 @@ class BookControllerTest {
 
     @Mock
     private IBookService bookService;
+
+    @Mock
+    private IReviewService reviewService;
 
     @InjectMocks
     private BookController bookController;
@@ -142,7 +146,7 @@ class BookControllerTest {
     @Test
     void givenAddNewBookRequest_thenReturnsAddNewBookPage() {
         Model model = mock(Model.class);
-        BookController bookController = new BookController(bookService);
+        BookController bookController = new BookController(bookService, reviewService);
         String viewName = bookController.addNewBook(model);
 
         verify(model).addAttribute(eq("currentYear"), anyInt());
@@ -188,7 +192,7 @@ class BookControllerTest {
     @Test
     void givenNonExistentBook_whenUpdateBook_thenThrowsResponseStatusException() {
         when(bookService.findById(anyLong())).thenReturn(Optional.empty());
-        BookController bookController = new BookController(bookService);
+        BookController bookController = new BookController(bookService, reviewService);
 
         assertThrows(ResponseStatusException.class, () -> bookController.updateBook(id, BookDto.empty(), null));
         verify(bookService).findById(id);
@@ -197,7 +201,7 @@ class BookControllerTest {
     @Test
     void givenExistingBook_whenDeleteBook_thenRedirectsToBooks() {
         doNothing().when(bookService).deleteById(id);
-        BookController bookController = new BookController(bookService);
+        BookController bookController = new BookController(bookService, reviewService);
         String result = bookController.deleteBook(id);
 
         verify(bookService).deleteById(id);
