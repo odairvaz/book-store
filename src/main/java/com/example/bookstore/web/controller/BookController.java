@@ -2,10 +2,14 @@ package com.example.bookstore.web.controller;
 
 
 import com.example.bookstore.persistense.model.Book;
+import com.example.bookstore.persistense.model.Review;
 import com.example.bookstore.service.IBookService;
+import com.example.bookstore.service.IReviewService;
 import com.example.bookstore.utils.ImageUtils;
 import com.example.bookstore.web.dto.BookDto;
+import com.example.bookstore.web.dto.ReviewDto;
 import com.example.bookstore.web.mapper.BookMapper;
+import com.example.bookstore.web.mapper.ReviewMapper;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Year;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -37,9 +42,11 @@ public class BookController {
     private final int currentYear = Year.now().getValue();
 
     private final IBookService bookService;
+    private final IReviewService reviewService;
 
-    public BookController(IBookService bookService) {
+    public BookController(IBookService bookService, IReviewService reviewService) {
         this.bookService = bookService;
+        this.reviewService = reviewService;
     }
 
     @GetMapping
@@ -86,6 +93,19 @@ public class BookController {
         Book book = bookService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         BookDto bookDto = BookMapper.convertToDto(book);
         model.addAttribute("book", bookDto);
+
+        // Fetch Reviews for the Book
+        ReviewMapper reviewMapper = new ReviewMapper();
+
+        List<ReviewDto> reviews = reviewService.findByBookId(id)
+                .stream()
+                .map(reviewMapper::convertToDto)
+                .toList();
+        model.addAttribute("reviews", reviews);
+
+        // Add an empty ReviewDto for form binding
+        model.addAttribute("review", ReviewDto.empty());
+
         model.addAttribute(PAGE_TITLE_ATTRIBUTE, "Book Details");
         if (book.getBookCover() != null) {
             String base64Image = Base64.getEncoder().encodeToString(book.getBookCover());
