@@ -7,9 +7,13 @@ import com.example.bookstore.persistense.repository.IReviewRepository;
 import com.example.bookstore.service.IReviewService;
 import com.example.bookstore.web.dto.ReviewDto;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.util.List;
 
 @Service
@@ -30,13 +34,13 @@ public class IReviewServiceImpl implements IReviewService {
     }
 
     @Override
-    public void addReview(Long bookId, ReviewDto reviewDto) {
+    public void addReview(Long bookId, ReviewDto reviewDto, Principal principal) {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Book not found"));
 
         Review review = new Review();
         review.setBook(book);
-        review.setReviewerName(reviewDto.reviewerName());
+        review.setReviewerName(principal.getName());
         review.setRating(reviewDto.rating());
         review.setComment(reviewDto.comment());
 

@@ -27,6 +27,7 @@ public class Book {
 
     private double price;
 
+    @Column(name ="book_cover")
     private byte[] bookCover;
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
