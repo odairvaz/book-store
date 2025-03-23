@@ -46,10 +46,6 @@
             <h3>Add a Review</h3>
             <form th:action="@{/api/v1/books/{bookId}/reviews(bookId=${book.id})}" th:object="${review}" method="post">
                 <div class="mb-3">
-                    <label for="reviewerName" class="form-label">Your Name</label>
-                    <input type="text" id="reviewerName" class="form-control" th:field="*{reviewerName}" required>
-                </div>
-                <div class="mb-3">
                     <label for="rating" class="form-label">Rating</label>
                     <select id="rating" class="form-select" th:field="*{rating}">
                         <option th:value="1">1</option>

@@ -19,6 +19,7 @@ public class Review {
     private Book book;
 
     @NotBlank
+    @Column(name ="reviewer_name")
     private String reviewerName;
 
     @Min(1)
@@ -27,6 +28,7 @@ public class Review {
 
     private String comment;
 
+    @Column(name ="created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public Review() {}
