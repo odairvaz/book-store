@@ -1,7 +1,7 @@
 package com.example.bookstore.config;
 
 import com.example.bookstore.authentication.AdminAuthenticationProvider;
-import com.example.bookstore.service.impl.UserDetailsServiceImpl;
+import com.example.bookstore.service.impl.BookStoreUserDetailsService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,9 +34,9 @@ public class SecurityConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfig.class);
 
-    private final UserDetailsServiceImpl userDetailsService;
+    private final BookStoreUserDetailsService userDetailsService;
 
-    public SecurityConfig(UserDetailsServiceImpl userDetailsService) {
+    public SecurityConfig(BookStoreUserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
 

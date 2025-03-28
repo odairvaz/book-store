@@ -122,7 +122,7 @@ public class IUserServiceImpl implements IUserService {
 
     @Override
     public User findUserByEmail(String email) {
-        return userRepository.findByEmail(email);
+        return userRepository.findByEmail(email).orElse(null);
     }
 
     @Override
@@ -131,7 +131,7 @@ public class IUserServiceImpl implements IUserService {
     }
 
     private boolean emailExists(final String email) {
-        return userRepository.findByEmail(email) != null;
+        return userRepository.findByEmail(email).isPresent();
     }
 
 }

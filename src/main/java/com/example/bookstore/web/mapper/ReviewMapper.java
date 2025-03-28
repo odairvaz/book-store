@@ -5,8 +5,8 @@ import com.example.bookstore.web.dto.ReviewDto;
 
 public class ReviewMapper {
 
-    public ReviewDto convertToDto(Review review) {
-        return new ReviewDto(review.getId(), review.getReviewerName(), review.getRating(),
+    public static ReviewDto convertToDto(Review review) {
+        return new ReviewDto(review.getId(), review.getUser(), review.getRating(),
                 review.getComment(), review.getCreatedAt());
     }
 

@@ -2,9 +2,9 @@ package com.example.bookstore.web.controller;
 
 
 import com.example.bookstore.persistense.model.User;
+import com.example.bookstore.security.core.userdetails.BookStoreUserDetail;
 import com.example.bookstore.service.IUserService;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,10 +25,8 @@ public class AccountController {
     }
 
     @GetMapping
-    public String home(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        User user = userService.findUserByEmail(username);
+    public String home(Model model,@AuthenticationPrincipal BookStoreUserDetail userDetails) {
+        User user = userService.findUserByEmail(userDetails.getEmail());
         model.addAttribute("user", user);
         return "/account/account";
     }
