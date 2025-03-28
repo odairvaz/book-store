@@ -32,12 +32,16 @@
             </div>
             <div th:each="review : ${reviews}" class="card mt-3">
                 <div class="card-body">
-                    <h5 class="card-title" th:text="${review.reviewerName}"></h5>
                     <p class="card-text">
                         Rating: <span th:text="${review.rating}"></span>/5
                     </p>
                     <p class="card-text" th:text="${review.comment}"></p>
                     <p class="text-muted">Reviewed on <span th:text="${#temporals.format(review.createdAt, 'dd MMM yyyy')}"></span></p>
+
+                    <div class="btn-group" role="group" th:if="${#authentication.principal.email == review.user.email}">
+                        <a th:href="@{/api/v1/books/reviews/edit/{id}(id=${review.id})}" class="btn btn-warning me-2">[[#{label.book.edit}]]</a>
+                        <a th:href="@{/api/v1/books/reviews/delete/{id}(id=${review.id})}" class="btn btn-danger">[[#{label.book.delete}]]</a>
+                    </div>
                 </div>
             </div>
         </div>

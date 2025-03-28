@@ -95,11 +95,9 @@ public class BookController {
         model.addAttribute("book", bookDto);
 
         // Fetch Reviews for the Book
-        ReviewMapper reviewMapper = new ReviewMapper();
-
-        List<ReviewDto> reviews = reviewService.findByBookId(id)
+        List<ReviewDto> reviews = reviewService.findByBookIdWithUser(id)
                 .stream()
-                .map(reviewMapper::convertToDto)
+                .map(ReviewMapper::convertToDto)
                 .toList();
         model.addAttribute("reviews", reviews);
 

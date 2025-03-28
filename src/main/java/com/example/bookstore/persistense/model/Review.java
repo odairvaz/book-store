@@ -18,9 +18,9 @@ public class Review {
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
-    @NotBlank
-    @Column(name ="reviewer_name")
-    private String reviewerName;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Min(1)
     @Max(5)
@@ -33,9 +33,9 @@ public class Review {
 
     public Review() {}
 
-    public Review(Book book, String reviewerName, int rating, String comment) {
+    public Review(Book book, User user, int rating, String comment) {
         this.book = book;
-        this.reviewerName = reviewerName;
+        this.user = user;
         this.rating = rating;
         this.comment = comment;
     }
@@ -52,12 +52,12 @@ public class Review {
         this.book = book;
     }
 
-    public String getReviewerName() {
-        return reviewerName;
+    public User getUser() {
+        return user;
     }
 
-    public void setReviewerName(String reviewerName) {
-        this.reviewerName = reviewerName;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public int getRating() {
